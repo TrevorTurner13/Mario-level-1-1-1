@@ -10,7 +10,7 @@ function love.load()
     player.grid = anim8.newGrid( 16, 16, player.spriteSheet:getWidth(), player.spriteSheet:getHeight() )
 
     player.animations = {}
-    player.animations.right = anim8.newAnimation( player.grid( '2-4', 1), 0.2)
+    player.animations.right = anim8.newAnimation( player.grid( '4-2', 1), 0.06)
 
     player.anim = player.animations.right
 
