@@ -2,7 +2,9 @@ function love.load()
     player = {}
     player.x = 400
     player.y = 200
-    player.speed = 3
+    player.speed = 5
+    player.spriteSheet = love.graphics.newImage('Sprites/Mario.png')
+    
 
 end
 
@@ -25,6 +27,6 @@ end
 end
 
 function love.draw()
-    love.graphics.circle("fill", player.x, player.y, 100)
+    love.graphics.draw(player.sprite, player.x, player.y)
 
 end
