@@ -14,44 +14,52 @@ function love.load()
 
     player.anim = player.animations.right
 
+    local isMoving = false
+    local isMovingLeft = false
+
 end
 
 function love.update(dt)
-    local isMoving = false
-
+    isMoving = false
+    
 
     if love.keyboard.isDown("d") then
          player.x = player.x + player.speed
          player.anim = player.animations.right
          isMoving = true
+         isMovingLeft = false
     end
 
     if love.keyboard.isDown("a") then
         player.x = player.x - player.speed
         player.anim = player.animations.right
         isMoving = true
+        isMovingLeft = true
    end
 
    if love.keyboard.isDown("s") then
-    player.y = player.y + player.speed
-    player.anim = player.animations.right
-    isMoving = true
-end
+        player.y = player.y + player.speed
+        player.anim = player.animations.right
+        isMoving = true
+    end
 
-if love.keyboard.isDown("w") then
-    player.y = player.y - player.speed
-    player.anim = player.animations.right
-    isMoving = true
-end
+    if love.keyboard.isDown("w") then
+        player.y = player.y - player.speed
+        player.anim = player.animations.right
+        isMoving = true
+    end
 
-if isMoving == false then
-    player.anim:gotoFrame(4)
-end
+    if isMoving == false then
+        player.anim:gotoFrame(4)
+    end
 
-player.anim:update(dt)
+    player.anim:update(dt)
 end
 
 function love.draw()
-    player.anim:draw(player.spriteSheet, player.x, player.y, nil, 5)
-
+    if isMovingLeft then 
+        player.anim:draw(player.spriteSheet, player.x, player.y, nil, -5, 5)
+    else
+        player.anim:draw(player.spriteSheet, player.x, player.y, nil, 5, 5)
+    end
 end
