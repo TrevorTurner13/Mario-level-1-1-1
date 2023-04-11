@@ -33,7 +33,7 @@ function love.load()
 
 	player.y_velocity = 0        -- Whenever the character hasn't jumped yet, the Y-Axis velocity is always at 0.
 
-	player.jump_height = -300    -- Whenever the character jumps, he can reach this height.
+	player.jump_height = -260    -- Whenever the character jumps, he can reach this height.
 	player.gravity = -500        -- Whenever the character falls, he will descend at this rate.
 
 end
