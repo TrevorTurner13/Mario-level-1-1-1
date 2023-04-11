@@ -12,8 +12,8 @@ function love.load()
     player = {}
     player.x = 0 
     player.y = 255
-    player.speed = 2
-    player.maxSpeed = 4
+    player.speed = 1
+    player.maxSpeed = 1.5
     player.spriteSheet = love.graphics.newImage('Sprites/Mario.png')
     player.smallMarioGrid = anim8.newGrid( 16, 16, player.spriteSheet:getWidth(), player.spriteSheet:getHeight())
     player.bigMarioGrid = anim8.newGrid(16, 32, player.spriteSheet:getWidth(), player.spriteSheet:getHeight(), 0, 16)
@@ -136,9 +136,9 @@ function love.draw()
         gameMap:drawLayer(gameMap.layers["Tile Layer 1"])
         gameMap:drawLayer(gameMap.layers["Tile Layer 2"])
     if isMovingLeft then 
-        player.anim:draw(player.spriteSheet, player.x + 30, player.y, nil, -2, 2)
+        player.anim:draw(player.spriteSheet, player.x + 30, player.y, nil, -1, 1)
     else
-        player.anim:draw(player.spriteSheet, player.x, player.y, nil, 2, 2)
+        player.anim:draw(player.spriteSheet, player.x, player.y, nil, 1, 1)
     end
         cam:detach()
 end
