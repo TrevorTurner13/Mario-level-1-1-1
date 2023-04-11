@@ -26,6 +26,19 @@ function love.load()
     local isMovingLeft = false
 
 
+
+    koopa = {}
+    koopa.x = 700
+    koopa.y = 200
+    koopa.speed = 3
+    koopa.spriteSheet = love.graphics.newImage('Sprites/Mario.png')
+    koopa.grid = anim8.newGrid( 16, 16, player.spriteSheet:getWidth(), player.spriteSheet:getHeight() )
+
+    koopa.animations = {}
+    koopa.animations.right = anim8.newAnimation( player.grid( '4-1', 1), 0.06)
+
+    koopa.anim = koopa.animations.right
+
 end
 
 function love.update(dt)
@@ -66,6 +79,7 @@ function love.update(dt)
     end
 
     player.anim:update(dt)
+    koopa.anim:update(dt)
 end
 
 function love.draw()
@@ -103,4 +117,5 @@ function checkCollision(a, b)
         --If one of these statements is false, return false.
         return false
     end
+    koopa.anim:draw(koopa.spriteSheet, koopa.x, koopa.y, nil, -5, 5)
 end
