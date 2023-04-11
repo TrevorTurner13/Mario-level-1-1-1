@@ -3,7 +3,7 @@ function love.load()
     love.graphics.setDefaultFilter("nearest", "nearest")
 
     sti = require 'Libraries/sti'
-    gameMap = sti('Maps/')
+    gameMap = sti('Maps/mario_map.lua')
 
     player = {}
     player.x = 400
@@ -86,6 +86,7 @@ function love.update(dt)
 end
 
 function love.draw()
+    gameMap:draw()
     if isMovingLeft then 
         player.anim:draw(player.spriteSheet, player.x, player.y, nil, -5, 5)
     else
