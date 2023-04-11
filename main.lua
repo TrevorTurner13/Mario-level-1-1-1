@@ -1,4 +1,7 @@
 function love.load()
+    camera = require 'Libraries/camera'
+    cam = camera()
+
     anim8 = require 'Libraries.anim8'
     love.graphics.setDefaultFilter("nearest", "nearest")
 
@@ -7,7 +10,7 @@ function love.load()
 
     player = {}
     player.x = 0 
-    player.y = 400
+    player.y = 255
     player.speed = 2
     player.spriteSheet = love.graphics.newImage('Sprites/Mario.png')
     player.smallMarioGrid = anim8.newGrid( 16, 16, player.spriteSheet:getWidth(), player.spriteSheet:getHeight())
@@ -83,13 +86,32 @@ function love.update(dt)
     end
 
     player.anim:update(dt)
+
+    cam:lookAt(player.x, player.y)
+
+    local w = love.graphics.getWidth()
+    local h = love.graphics.getHeight()
+
+    local mapW = gameMap.width * gameMap.tilewidth
+    local mapH = gameMap.height * gameMap.tileheight
+
+    if cam.x < w/2 then
+        cam.x = w/2
+    end
+
+    if cam.y < w/2 then
+        cam.y = w/2
+    end
 end
 
 function love.draw()
-    gameMap:draw()
-    if isMovingLeft then 
+    cam:attach()
+        gameMap:drawLayer(gameMap.layers["Tile Layer 1"])
+        gameMap:drawLayer(gameMap.layers["Tile Layer 2"])
+        if isMovingLeft then 
         player.anim:draw(player.spriteSheet, player.x + 30, player.y, nil, -2, 2)
-    else
+     else
         player.anim:draw(player.spriteSheet, player.x, player.y, nil, 2, 2)
-    end
+        end
+        cam:detach()
 end
