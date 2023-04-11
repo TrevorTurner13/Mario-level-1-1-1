@@ -1,4 +1,7 @@
 function love.load()
+    wf = require 'Libraries/windfield'
+    world = wf.newWorld(0,0)
+
     camera = require 'Libraries/camera'
     cam = camera()
     cam:zoom(2)
@@ -10,10 +13,17 @@ function love.load()
     gameMap = sti('Maps/mario_map.lua')
 
     player = {}
+    player.collider = world:newBSGRectangleCollider( 10, 260, 20, 32, 0)
+    player.collider:setFixedRotation(true)
     player.x = 0 
+<<<<<<< Updated upstream
     player.y = 270
     player.speed = 1
     player.maxSpeed = 1.5
+=======
+    player.y = 200
+    player.speed = 50
+>>>>>>> Stashed changes
     player.spriteSheet = love.graphics.newImage('Sprites/Mario.png')
     player.smallMarioGrid = anim8.newGrid( 16, 16, player.spriteSheet:getWidth(), player.spriteSheet:getHeight())
     player.bigMarioGrid = anim8.newGrid(16, 32, player.spriteSheet:getWidth(), player.spriteSheet:getHeight(), 0, 16)
@@ -41,10 +51,18 @@ end
 function love.update(dt)
     isMoving = false
     isJumping = false
+
+    local vx = 0
+    local vy = 0
     
         
+<<<<<<< Updated upstream
     if love.keyboard.isDown("d") and not love.keyboard.isDown('lshift') then  
         player.x = player.x + player.speed     
+=======
+    if love.keyboard.isDown("d") then  
+        vx = player.speed     
+>>>>>>> Stashed changes
         player.anim = player.animations.right
         if not isJumping then
             isMoving = true
@@ -52,6 +70,7 @@ function love.update(dt)
         end
     end
 
+<<<<<<< Updated upstream
     if love.keyboard.isDown('lshift') and love.keyboard.isDown("d") then
         player.x = player.x + player.maxSpeed
         player.anim = player.animations.right
@@ -63,6 +82,10 @@ function love.update(dt)
 
     if love.keyboard.isDown("a") and not love.keyboard.isDown('lshift') then
         player.x = player.x - player.speed
+=======
+    if love.keyboard.isDown("a") then
+        vx = player.speed * - 1
+>>>>>>> Stashed changes
         player.anim = player.animations.right
         if not isJumping then
             isMoving = true
@@ -104,6 +127,12 @@ function love.update(dt)
         player.anim:gotoFrame(4)
     end
 
+    player.collider:setLinearVelocity(vx, vy)
+
+    world:update(dt)
+    player.x = player.collider:getX()
+    player.y = player.collider:getY()
+
     player.anim:update(dt)
 
     cam:lookAt(player.x, player.y)
@@ -135,10 +164,19 @@ function love.draw()
     cam:attach()
         gameMap:drawLayer(gameMap.layers["Tile Layer 1"])
         gameMap:drawLayer(gameMap.layers["Tile Layer 2"])
+<<<<<<< Updated upstream
     if isMovingLeft then 
         player.anim:draw(player.spriteSheet, player.x +20, player.y, nil, -1, 1)
     else
         player.anim:draw(player.spriteSheet, player.x, player.y, nil, 1, 1)
     end
+=======
+        if isMovingLeft then 
+        player.anim:draw(player.spriteSheet, player.x + 30, player.y, nil, -2, 2)
+     else
+        player.anim:draw(player.spriteSheet, player.x, player.y, nil, 2, 2)
+        end
+        world:draw()
+>>>>>>> Stashed changes
         cam:detach()
 end
