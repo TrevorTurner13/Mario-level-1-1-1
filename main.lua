@@ -10,7 +10,7 @@ function love.load()
     player.grid = anim8.newGrid( 16, 16, player.spriteSheet:getWidth(), player.spriteSheet:getHeight() )
 
     player.animations = {}
-    player.animations.right = anim8.newAnimation( player.grid( '4-2', 1), 0.06)
+    player.animations.right = anim8.newAnimation( player.grid( '4-1', 1), 0.06)
 
     player.anim = player.animations.right
 
@@ -23,21 +23,29 @@ function love.update(dt)
     if love.keyboard.isDown("d") then
          player.x = player.x + player.speed
          player.anim = player.animations.right
+         isMoving = true
     end
 
     if love.keyboard.isDown("a") then
         player.x = player.x - player.speed
         player.anim = player.animations.right
+        isMoving = true
    end
 
    if love.keyboard.isDown("s") then
     player.y = player.y + player.speed
     player.anim = player.animations.right
+    isMoving = true
 end
 
 if love.keyboard.isDown("w") then
     player.y = player.y - player.speed
     player.anim = player.animations.right
+    isMoving = true
+end
+
+if isMoving == false then
+    player.anim:gotoFrame(4)
 end
 
 player.anim:update(dt)
