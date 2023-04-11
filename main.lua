@@ -2,6 +2,9 @@ function love.load()
     anim8 = require 'Libraries.anim8'
     love.graphics.setDefaultFilter("nearest", "nearest")
 
+    sti = require 'Libraries/sti'
+    gameMap = sti('Maps/')
+
     player = {}
     player.x = 400
     player.y = 400
