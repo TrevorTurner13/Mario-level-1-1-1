@@ -3,15 +3,15 @@ function love.load()
     love.graphics.setDefaultFilter("nearest", "nearest")
 
     player = {}
-    player.x = 400
+    player.x = 0 
     player.y = 400
-    player.speed = 5
+    player.speed = 2
     player.spriteSheet = love.graphics.newImage('Sprites/Mario.png')
     player.smallMarioGrid = anim8.newGrid( 16, 16, player.spriteSheet:getWidth(), player.spriteSheet:getHeight())
     player.bigMarioGrid = anim8.newGrid(16, 32, player.spriteSheet:getWidth(), player.spriteSheet:getHeight(), 0, 16)
 
     player.animations = {}
-    player.animations.right = anim8.newAnimation( player.smallMarioGrid( '4-1', 1), 0.06)
+    player.animations.right = anim8.newAnimation( player.smallMarioGrid( '4-1', 1), 0.1)
     player.animations.jump = anim8.newAnimation( player.smallMarioGrid( '6-1 ', 1), 0.06)
     
 
@@ -25,8 +25,8 @@ function love.load()
 
 	player.y_velocity = 0        -- Whenever the character hasn't jumped yet, the Y-Axis velocity is always at 0.
 
-	player.jump_height = -500    -- Whenever the character jumps, he can reach this height.
-	player.gravity = -700        -- Whenever the character falls, he will descend at this rate.
+	player.jump_height = -300    -- Whenever the character jumps, he can reach this height.
+	player.gravity = -500        -- Whenever the character falls, he will descend at this rate.
 
 end
 
@@ -34,15 +34,16 @@ function love.update(dt)
     isMoving = false
     isJumping = false
     
-
-    if love.keyboard.isDown("d") then
-        player.x = player.x + player.speed
+        
+    if love.keyboard.isDown("d") then  
+        player.x = player.x + player.speed     
         player.anim = player.animations.right
         if not isJumping then
             isMoving = true
             isMovingLeft = false
         end
     end
+    
 
     if love.keyboard.isDown("a") then
         player.x = player.x - player.speed
@@ -67,8 +68,7 @@ function love.update(dt)
 
 	if player.y > player.ground then
 		player.y_velocity = 0
-    	player.y = player.ground
-        
+    	player.y = player.ground   
 	end
     
     if isJumping then
@@ -84,8 +84,8 @@ end
 
 function love.draw()
     if isMovingLeft then 
-        player.anim:draw(player.spriteSheet, player.x, player.y, nil, -5, 5)
+        player.anim:draw(player.spriteSheet, player.x + 30, player.y, nil, -2, 2)
     else
-        player.anim:draw(player.spriteSheet, player.x, player.y, nil, 5, 5)
+        player.anim:draw(player.spriteSheet, player.x, player.y, nil, 2, 2)
     end
 end
