@@ -92,8 +92,6 @@ function love.update(dt)
     local w = love.graphics.getWidth()
     local h = love.graphics.getHeight()
 
-    local mapW = gameMap.width * gameMap.tilewidth
-    local mapH = gameMap.height * gameMap.tileheight
 
     if cam.x < w/2 then
         cam.x = w/2
@@ -101,6 +99,13 @@ function love.update(dt)
 
     if cam.y < w/2 then
         cam.y = w/2
+    end
+
+    local mapW = gameMap.width * gameMap.tilewidth
+    local mapH = gameMap.height * gameMap.tileheight
+
+    if cam.x > (mapW - w/2) then
+        cam.x = (mapW - w/2)
     end
 end
 
