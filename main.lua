@@ -1,4 +1,8 @@
 function love.load()
+    camera = require 'Libraries/camera'
+    cam = camera()
+    cam:zoom(2)
+
     anim8 = require 'Libraries.anim8'
     love.graphics.setDefaultFilter("nearest", "nearest")
 
@@ -7,8 +11,9 @@ function love.load()
 
     player = {}
     player.x = 0 
-    player.y = 400
-    player.speed = 2
+    player.y = 270
+    player.speed = 1
+    player.maxSpeed = 1.5
     player.spriteSheet = love.graphics.newImage('Sprites/Mario.png')
     player.smallMarioGrid = anim8.newGrid( 16, 16, player.spriteSheet:getWidth(), player.spriteSheet:getHeight())
     player.bigMarioGrid = anim8.newGrid(16, 32, player.spriteSheet:getWidth(), player.spriteSheet:getHeight(), 0, 16)
@@ -61,7 +66,7 @@ function love.update(dt)
     PLAYERHITBOX.x = player.x
     PLAYERHITBOX.y = player.y
         
-    if love.keyboard.isDown("d") then  
+    if love.keyboard.isDown("d") and not love.keyboard.isDown('lshift') then  
         player.x = player.x + player.speed     
         player.anim = player.animations.right
         if not isJumping then
@@ -69,15 +74,33 @@ function love.update(dt)
             isMovingLeft = false
         end
     end
-    
-    if love.keyboard.isDown("a") then
+
+    if love.keyboard.isDown('lshift') and love.keyboard.isDown("d") then
+        player.x = player.x + player.maxSpeed
+        player.anim = player.animations.right
+        if not isJumping then
+            isMoving = true
+            isMovingLeft = false
+        end
+    end
+
+    if love.keyboard.isDown("a") and not love.keyboard.isDown('lshift') then
         player.x = player.x - player.speed
         player.anim = player.animations.right
         if not isJumping then
             isMoving = true
             isMovingLeft = true
         end
-   end
+    end
+
+    if love.keyboard.isDown("a") and love.keyboard.isDown('lshift') then
+        player.x = player.x - player.maxSpeed
+        player.anim = player.animations.right
+        if not isJumping then
+            isMoving = true
+            isMovingLeft = true
+        end
+    end
 
     if love.keyboard.isDown('space') then
         if player.y_velocity == 0 then
@@ -106,17 +129,44 @@ function love.update(dt)
 
     player.anim:update(dt)
     koopa.anim:update(dt)
+
+    cam:lookAt(player.x, player.y)
+
+    local w = love.graphics.getWidth()
+    local h = love.graphics.getHeight()
+
+    if cam.x *2 < w/2 then
+        cam.x = w/2/2
+    end
+
+    if cam.y *2 < w/2 then
+        cam.y = w/2/2
+    end
+
+    local mapW = gameMap.width * gameMap.tilewidth
+    local mapH = gameMap.height * gameMap.tileheight
+
+    if cam.x > (mapW - w/2/2) then
+        cam.x = (mapW - w/2/2)
+    end
+
+    if cam.y *2 > (mapH - h/2/2) then
+        cam.y = (mapH - h/2/2)
+    end
 end
 
 function love.draw()
-    gameMap:draw()
+    cam:attach()
+        gameMap:drawLayer(gameMap.layers["Tile Layer 1"])
+        gameMap:drawLayer(gameMap.layers["Tile Layer 2"])
     if isMovingLeft then 
-        player.anim:draw(player.spriteSheet, player.x + 30, player.y, nil, -2, 2)
+        player.anim:draw(player.spriteSheet, player.x +20, player.y, nil, -1, 1)
     else
-        player.anim:draw(player.spriteSheet, player.x, player.y, nil, 2, 2)
+        player.anim:draw(player.spriteSheet, player.x, player.y, nil, 1, 1)
     end
 
-    love.graphics.rectangle("fill", PLAYERHITBOX.x + 2, PLAYERHITBOX.y - 1, 32, 32)
+    love.graphics.rectangle("fill", PLAYERHITBOX.x + 2, PLAYERHITBOX.y - 1, 16, 16)
+    cam:detach()
 end
 
 function checkCollision(a, b)
@@ -145,4 +195,5 @@ function checkCollision(a, b)
         return false
     end
     koopa.anim:draw(koopa.spriteSheet, koopa.x, koopa.y, nil, -5, 5)
+    
 end
