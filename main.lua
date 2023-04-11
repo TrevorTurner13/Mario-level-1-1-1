@@ -2,15 +2,21 @@ function love.load()
     anim8 = require 'Libraries.anim8'
     love.graphics.setDefaultFilter("nearest", "nearest")
 
+    sti = require 'Libraries/sti'
+    gameMap = sti('Maps/mario_map.lua')
+
     player = {}
-    player.x = 400
-    player.y = 200
-    player.speed = 5
+    player.x = 0 
+    player.y = 400
+    player.speed = 2
     player.spriteSheet = love.graphics.newImage('Sprites/Mario.png')
-    player.grid = anim8.newGrid( 16, 16, player.spriteSheet:getWidth(), player.spriteSheet:getHeight() )
+    player.smallMarioGrid = anim8.newGrid( 16, 16, player.spriteSheet:getWidth(), player.spriteSheet:getHeight())
+    player.bigMarioGrid = anim8.newGrid(16, 32, player.spriteSheet:getWidth(), player.spriteSheet:getHeight(), 0, 16)
 
     player.animations = {}
-    player.animations.right = anim8.newAnimation( player.grid( '4-1', 1), 0.06)
+    player.animations.right = anim8.newAnimation( player.smallMarioGrid( '4-1', 1), 0.1)
+    player.animations.jump = anim8.newAnimation( player.smallMarioGrid( '6-1 ', 1), 0.06)
+    
 
     player.anim = player.animations.right
 
@@ -32,12 +38,14 @@ function love.load()
     koopa.y = 200
     koopa.speed = 3
     koopa.spriteSheet = love.graphics.newImage('Sprites/Mario.png')
-    koopa.grid = anim8.newGrid( 16, 16, player.spriteSheet:getWidth(), player.spriteSheet:getHeight() )
+    koopa.smallMarioGrid = anim8.newGrid( 16, 16, player.spriteSheet:getWidth(), player.spriteSheet:getHeight())
 
     koopa.animations = {}
-    koopa.animations.right = anim8.newAnimation( player.grid( '4-1', 1), 0.06)
+    koopa.animations.right = anim8.newAnimation( player.smallMarioGrid( '4-1', 1), 0.06)
 
     koopa.anim = koopa.animations.right
+	player.jump_height = -300    -- Whenever the character jumps, he can reach this height.
+	player.gravity = -500        -- Whenever the character falls, he will descend at this rate.
 
 end
 
@@ -54,6 +62,15 @@ function love.update(dt)
          isMoving = true
          isMovingLeft = false
     end
+    if love.keyboard.isDown("d") then  
+        player.x = player.x + player.speed     
+        player.anim = player.animations.right
+        if not isJumping then
+            isMoving = true
+            isMovingLeft = false
+        end
+    end
+    
 
     if love.keyboard.isDown("a") then
         player.x = player.x - player.speed
@@ -62,8 +79,27 @@ function love.update(dt)
         isMovingLeft = true
    end
 
-   if love.keyboard.isDown("s") then
-        player.y = player.y + player.speed
+    if love.keyboard.isDown('space') then
+		if player.y_velocity == 0 then
+			player.y_velocity = player.jump_height
+		end
+	end
+
+	if player.y_velocity ~= 0 then
+		player.y = player.y + player.y_velocity * dt
+		player.y_velocity = player.y_velocity - player.gravity * dt
+        isJumping = true
+	end
+
+	if player.y > player.ground then
+		player.y_velocity = 0
+    	player.y = player.ground   
+	end
+    
+    if isJumping then
+        player.anim = player.animations.jump
+        player.anim:gotoFrame(1)
+    elseif not isMoving and not isJumping then
         player.anim = player.animations.right
         isMoving = true
     end
@@ -83,10 +119,11 @@ function love.update(dt)
 end
 
 function love.draw()
+    gameMap:draw()
     if isMovingLeft then 
-        player.anim:draw(player.spriteSheet, player.x + 60, player.y, nil, -5, 5)
+        player.anim:draw(player.spriteSheet, player.x + 30, player.y, nil, -2, 2)
     else
-        player.anim:draw(player.spriteSheet, player.x, player.y, nil, 5, 5)
+        player.anim:draw(player.spriteSheet, player.x, player.y, nil, 2, 2)
     end
 
     love.graphics.rectangle("fill", PLAYERHITBOX.x + 2, PLAYERHITBOX.y - 1, 32, 32)
