@@ -12,6 +12,7 @@ function love.load()
     player.x = 0 
     player.y = 255
     player.speed = 2
+    player.maxSpeed = 4
     player.spriteSheet = love.graphics.newImage('Sprites/Mario.png')
     player.smallMarioGrid = anim8.newGrid( 16, 16, player.spriteSheet:getWidth(), player.spriteSheet:getHeight())
     player.bigMarioGrid = anim8.newGrid(16, 32, player.spriteSheet:getWidth(), player.spriteSheet:getHeight(), 0, 16)
@@ -41,7 +42,7 @@ function love.update(dt)
     isJumping = false
     
         
-    if love.keyboard.isDown("d") then  
+    if love.keyboard.isDown("d") and not love.keyboard.isDown('lshift') then  
         player.x = player.x + player.speed     
         player.anim = player.animations.right
         if not isJumping then
@@ -49,16 +50,33 @@ function love.update(dt)
             isMovingLeft = false
         end
     end
-    
 
-    if love.keyboard.isDown("a") then
+    if love.keyboard.isDown('lshift') and love.keyboard.isDown("d") then
+        player.x = player.x + player.maxSpeed
+        player.anim = player.animations.right
+        if not isJumping then
+            isMoving = true
+            isMovingLeft = false
+        end
+    end
+
+    if love.keyboard.isDown("a") and not love.keyboard.isDown('lshift') then
         player.x = player.x - player.speed
         player.anim = player.animations.right
         if not isJumping then
             isMoving = true
             isMovingLeft = true
         end
-   end
+    end
+
+    if love.keyboard.isDown("a") and love.keyboard.isDown('lshift') then
+        player.x = player.x - player.maxSpeed
+        player.anim = player.animations.right
+        if not isJumping then
+            isMoving = true
+            isMovingLeft = true
+        end
+    end
 
     if love.keyboard.isDown('space') then
 		if player.y_velocity == 0 then
@@ -108,10 +126,10 @@ function love.draw()
     cam:attach()
         gameMap:drawLayer(gameMap.layers["Tile Layer 1"])
         gameMap:drawLayer(gameMap.layers["Tile Layer 2"])
-        if isMovingLeft then 
+    if isMovingLeft then 
         player.anim:draw(player.spriteSheet, player.x + 30, player.y, nil, -2, 2)
-     else
+    else
         player.anim:draw(player.spriteSheet, player.x, player.y, nil, 2, 2)
-        end
+    end
         cam:detach()
 end
