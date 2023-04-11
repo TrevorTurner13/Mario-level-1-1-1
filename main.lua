@@ -11,7 +11,7 @@ function love.load()
 
     player = {}
     player.x = 0 
-    player.y = 255
+    player.y = 270
     player.speed = 1
     player.maxSpeed = 1.5
     player.spriteSheet = love.graphics.newImage('Sprites/Mario.png')
@@ -136,7 +136,7 @@ function love.draw()
         gameMap:drawLayer(gameMap.layers["Tile Layer 1"])
         gameMap:drawLayer(gameMap.layers["Tile Layer 2"])
     if isMovingLeft then 
-        player.anim:draw(player.spriteSheet, player.x + 30, player.y, nil, -1, 1)
+        player.anim:draw(player.spriteSheet, player.x +20, player.y, nil, -1, 1)
     else
         player.anim:draw(player.spriteSheet, player.x, player.y, nil, 1, 1)
     end
