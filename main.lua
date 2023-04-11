@@ -1,6 +1,7 @@
 function love.load()
     camera = require 'Libraries/camera'
     cam = camera()
+    cam:zoom(2)
 
     anim8 = require 'Libraries.anim8'
     love.graphics.setDefaultFilter("nearest", "nearest")
@@ -92,20 +93,23 @@ function love.update(dt)
     local w = love.graphics.getWidth()
     local h = love.graphics.getHeight()
 
-
-    if cam.x < w/2 then
-        cam.x = w/2
+    if cam.x *2 < w/2 then
+        cam.x = w/2/2
     end
 
-    if cam.y < w/2 then
-        cam.y = w/2
+    if cam.y *2 < w/2 then
+        cam.y = w/2/2
     end
 
     local mapW = gameMap.width * gameMap.tilewidth
     local mapH = gameMap.height * gameMap.tileheight
 
-    if cam.x > (mapW - w/2) then
-        cam.x = (mapW - w/2)
+    if cam.x > (mapW - w/2/2) then
+        cam.x = (mapW - w/2/2)
+    end
+
+    if cam.y *2 > (mapH - h/2/2) then
+        cam.y = (mapH - h/2/2)
     end
 end
 
