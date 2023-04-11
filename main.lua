@@ -13,10 +13,10 @@ function love.load()
     gameMap = sti('Maps/mario_map.lua')
 
     player = {}
-    player.collider = world:newBSGRectangleCollider( 10, 260, 20, 32, 0)
+    player.collider = world:newBSGRectangleCollider( 10, 240, 20, 32, 0)
     player.collider:setFixedRotation(true)
     player.x = 0 
-    player.y = 270
+    player.y = 240
     player.speed = 90
     player.maxSpeed = 1.5
     player.spriteSheet = love.graphics.newImage('Sprites/Mario.png')
@@ -38,8 +38,8 @@ function love.load()
 
 	player.y_velocity = 0        -- Whenever the character hasn't jumped yet, the Y-Axis velocity is always at 0.
 
-	player.jump_height = -260    -- Whenever the character jumps, he can reach this height.
-	player.gravity = -500        -- Whenever the character falls, he will descend at this rate.
+	player.jump_height = -2000    -- Whenever the character jumps, he can reach this height.
+	player.gravity = -500      -- Whenever the character falls, he will descend at this rate.
 
     walls = {}
     if gameMap.layers["walls"] then 
@@ -112,6 +112,9 @@ function love.update(dt)
     end
 
     player.collider:setLinearVelocity(vx, vy)
+    if isMoving == false then
+        player.anim:gotoFrame(4)
+    end
 
     world:update(dt)
     player.x = player.collider:getX()
