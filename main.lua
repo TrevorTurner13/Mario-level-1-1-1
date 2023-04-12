@@ -1,6 +1,6 @@
 function love.load()
     wf = require 'Libraries/windfield'
-    world = wf.newWorld(0,0)
+    world = wf.newWorld(0, 0)
 
     camera = require 'Libraries/camera'
     cam = camera()
@@ -13,6 +13,8 @@ function love.load()
     gameMap = sti('Maps/mario_map.lua')
 
     player = {}
+    player.collider = world:newBSGRectangleCollider( 50, 240, 20, 32, 15)
+    player.collider:setFixedRotation(true)
     player.x = 0 
     player.y = 270
     player.speed = 0.75
