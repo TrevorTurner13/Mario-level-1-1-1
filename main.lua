@@ -43,7 +43,7 @@ function love.load()
 
     walls = {}
     if gameMap.layers["walls"] then 
-        for i, obj in pairs(gameMap.layers["Walls"].objects) do
+        for i, obj in pairs(gameMap.layers["Object Layer 1"].objects) do
             local wall = world:newRectangleCollider(obj.x, obj.y, obj.width, obj.height)
             wall:setType('static')
             table.insert(walls.wall)
