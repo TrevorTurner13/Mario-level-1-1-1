@@ -46,8 +46,8 @@ function love.load()
 	player.gravity = -1650      -- Whenever the character falls, he will descend at this rate.
 
     walls = {}
-    if gameMap.layers["walls"] then 
-        for i, obj in pairs(gameMap.layers["Walls"].objects) do
+    if gameMap.layers["Object Layer 1"] then 
+        for i, obj in pairs(gameMap.layers["Object Layer 1"].objects) do
             local wall = world:newRectangleCollider(obj.x, obj.y, obj.width, obj.height)
             wall:setType('static')
             table.insert(walls.wall)

@@ -10,7 +10,7 @@ return {
   tilewidth = 16,
   tileheight = 16,
   nextlayerid = 4,
-  nextobjectid = 60,
+  nextobjectid = 66,
   properties = {},
   tilesets = {
     {
@@ -157,7 +157,7 @@ return {
       type = "objectgroup",
       draworder = "topdown",
       id = 3,
-      name = "Object Layer 1",
+      name = "Walls",
       class = "",
       visible = true,
       opacity = 1,
@@ -930,6 +930,32 @@ return {
           y = 129,
           width = 2,
           height = 105,
+          rotation = 0,
+          visible = true,
+          properties = {}
+        },
+        {
+          id = 62,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 3073,
+          y = 254,
+          width = 30,
+          height = 32,
+          rotation = 0,
+          visible = true,
+          properties = {}
+        },
+        {
+          id = 63,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = 2897,
+          y = 207,
+          width = 64,
+          height = 17,
           rotation = 0,
           visible = true,
           properties = {}
