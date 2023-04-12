@@ -23,7 +23,6 @@ function love.load()
     sounds.Squish:setLooping(false)
 
     player = {}
-
     player.x = 0 
     player.y = 270
     player.speed = 20000
@@ -35,7 +34,6 @@ function love.load()
     player.animations = {}
     player.animations.right = anim8.newAnimation( player.smallMarioGrid( '4-1', 1), 0.06)
     player.animations.jump = anim8.newAnimation( player.smallMarioGrid( '6-1 ', 1), 0.06)
-    
     player.anim = player.animations.right
 
     player.isMoving = false
@@ -43,16 +41,16 @@ function love.load()
     player.isJumping = false
     player.onGround = true
 
-    vx = 0
-    vy = 0
     player.collider = world:newBSGRectangleCollider( 0, 0, 16, 16, 0)
     player.collider:setFixedRotation(true)
-    --player.ground = 0 -- This makes the character land on the plaform.
+	player.y_velocity = 0
+	player.jump_height = -80000
+	player.gravity = -78000
 
-	player.y_velocity = 0    -- Whenever the character hasn't jumped yet, the Y-Axis velocity is always at 0.
+    vx = 0
+    vy = 0
 
-	player.jump_height = -80000   -- Whenever the character jumps, he can reach this height.
-	player.gravity = -78000     -- Whenever the character falls, he will descend at this rate.
+    
 
     walls = {}
     if gameMap.layers["Walls"] then 
