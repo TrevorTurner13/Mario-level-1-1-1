@@ -22,6 +22,9 @@ function love.load()
     sounds.Squish = love.audio.newSource("sounds/Squish.wav", "stream")
     sounds.Squish:setLooping(false)
 
+    world:addCollisionClass('Player')
+    world:addCollisionClass('Enemy')
+
     player = {}
     player.x = 0 
     player.y = 270
@@ -43,6 +46,8 @@ function love.load()
 
     player.collider = world:newBSGRectangleCollider( 0, 0, 16, 16, 0)
     player.collider:setFixedRotation(true)
+    player.collider:setCollisionClass('Player')
+    player.collider:setObject(player)
 	player.y_velocity = 0
 	player.jump_height = -80000
 	player.gravity = -78000
@@ -50,6 +55,20 @@ function love.load()
     vx = 0
     vy = 0
 
+    gambu = {}
+    gambu.x = 20
+    gambu.y = 240
+    gambu.spriteSheet = love.graphics.newImage('Sprites/gambu.png')
+    gambu.grid = anim8.newGrid( 16, 16, gambu.spriteSheet:getWidth(), gambu.spriteSheet:getHeight())
+
+    gambu.animations = {}
+    gambu.animations.moving = anim8.newAnimation( gambu.grid( '1-2', 1), 0.06)
+    gambu.anim = gambu.animations.moving
+
+    gambu.collider = world:newBSGRectangleCollider(20, 240, 16, 16, 0)
+    gambu.collider:setFixedRotation(true)
+    gambu.collider:setCollisionClass('Enemy')
+    gambu.collider:setObject(gambu)
     
 
     walls = {}
@@ -66,11 +85,13 @@ function love.update(dt)
     sounds.music:play()
     player.isMoving = false
     player.isJumping = false
+    
 
-    player.collider:setLinearVelocity(vx * dt, vy)
+    player.collider:setLinearVelocity(vx, vy)
+    gambu.collider:setLinearVelocity(0, 0)
 
     if love.keyboard.isDown("d") and not love.keyboard.isDown('lshift') then  
-        vx = player.speed 
+        vx = player.speed * dt
         player.anim = player.animations.right
         if not player.isJumping then
             player.isMoving = true
@@ -79,7 +100,7 @@ function love.update(dt)
     
 
     elseif love.keyboard.isDown("d") and love.keyboard.isDown('lshift') then
-        vx = player.maxSpeed
+        vx = player.maxSpeed * dt
         player.anim = player.animations.right
         if not player.isJumping then
             player.isMoving = true
@@ -88,7 +109,7 @@ function love.update(dt)
     
 
     elseif love.keyboard.isDown("a") and not love.keyboard.isDown('lshift') then
-        vx = player.speed * -1
+        vx = player.speed * dt * -1
         player.anim = player.animations.right
         if not player.isJumping then
             player.isMoving = true
@@ -97,7 +118,7 @@ function love.update(dt)
     
 
     elseif love.keyboard.isDown("a") and love.keyboard.isDown('lshift') then
-        vx = player.maxSpeed * -1
+        vx = player.maxSpeed * dt * -1
         player.anim = player.animations.right
         if not player.isJumping then
             player.isMoving = true
@@ -134,9 +155,7 @@ function love.update(dt)
         player.anim:gotoFrame(4)
         vx = 0
     end
-
-    
-    
+  
     if isMovingLeft then
         player.x = player.collider:getX() - 8
     else
@@ -144,7 +163,14 @@ function love.update(dt)
     end
     player.y = player.collider:getY() - 8
 
-   
+    gambu.x = gambu.collider:getX() - 8
+    gambu.y = gambu.collider:getY() - 8
+
+    if player.collider:enter('Enemy') then
+        local collision_data = player.collider:getEnterCollisionData('Enemy')
+        local gambu = collision_data.collider:getObject()
+        
+    end
 
     cam:lookAt(player.x, player.y)
 
@@ -171,6 +197,7 @@ function love.update(dt)
     end
 
     player.anim:update(dt)
+    gambu.anim:update(dt)
 
     world:update(dt)
 end
@@ -179,11 +206,12 @@ function love.draw()
     cam:attach()
         gameMap:drawLayer(gameMap.layers["Tile Layer 1"])
         gameMap:drawLayer(gameMap.layers["Tile Layer 2"])
-        if player.isMovingLeft then 
+    if player.isMovingLeft then 
         player.anim:draw(player.spriteSheet, player.x + 15, player.y, nil, -1, 1)
-     else
+    else
         player.anim:draw(player.spriteSheet, player.x, player.y, nil, 1, 1)
-        end
-        world:draw()
-        cam:detach()
+    end
+    gambu.anim:draw(gambu.spriteSheet, gambu.x, gambu.y, nil, 1, 1)
+    world:draw()
+    cam:detach()
 end
