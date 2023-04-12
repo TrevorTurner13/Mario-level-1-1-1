@@ -1,6 +1,6 @@
 function love.load()
     wf = require 'Libraries/windfield'
-    world = wf.newWorld(0, 0)
+    world = wf.newWorld(0, 40000)
 
     camera = require 'Libraries/camera'
     cam = camera()
@@ -13,10 +13,11 @@ function love.load()
     gameMap = sti('Maps/mario_map.lua')
 
     player = {}
+
     player.x = 0 
     player.y = 270
-    player.speed = 0.75
-    player.maxSpeed = 1.2
+    player.speed = 15000
+    player.maxSpeed = 225
     player.spriteSheet = love.graphics.newImage('Sprites/Mario.png')
     player.smallMarioGrid = anim8.newGrid( 16, 16, player.spriteSheet:getWidth(), player.spriteSheet:getHeight())
     player.bigMarioGrid = anim8.newGrid(16, 32, player.spriteSheet:getWidth(), player.spriteSheet:getHeight(), 0, 16)
@@ -30,27 +31,25 @@ function love.load()
     player.isMoving = false
     player.isMovingLeft = false
     player.isJumping = false
+    player.onGround = true
 
-    player.collider = world:newBSGRectangleCollider( player.x, player.y, 16, 16, 0)
+    vx = 0
+    vy = 0
+    player.collider = world:newBSGRectangleCollider( 0, 0, 16, 16, 0)
     player.collider:setFixedRotation(true)
-    vx = 0
-    vy = 0
-    
-    player.ground = 270 -- This makes the character land on the plaform.
+    --player.ground = 0 -- This makes the character land on the plaform.
 
-    player.y_velocity = 0        -- Whenever the character hasn't jumped yet, the Y-Axis velocity is always at 0.
-    vx = 0
-    vy = 0
+	player.y_velocity = 0        -- Whenever the character hasn't jumped yet, the Y-Axis velocity is always at 0.
 
-	player.jump_height = -500   -- Whenever the character jumps, he can reach this height.
-	player.gravity = -1650      -- Whenever the character falls, he will descend at this rate.
+	player.jump_height = -80000   -- Whenever the character jumps, he can reach this height.
+	player.gravity = -78000     -- Whenever the character falls, he will descend at this rate.
 
     walls = {}
-    if gameMap.layers["Object Layer 1"] then 
-        for i, obj in pairs(gameMap.layers["Object Layer 1"].objects) do
+    if gameMap.layers["Walls"] then 
+        for i, obj in pairs(gameMap.layers["Walls"].objects) do
             local wall = world:newRectangleCollider(obj.x, obj.y, obj.width, obj.height)
             wall:setType('static')
-            table.insert(walls.wall)
+            table.insert(walls,wall)
         end
     end
 end
@@ -59,57 +58,62 @@ function love.update(dt)
     player.isMoving = false
     player.isJumping = false
 
+   
+
     if love.keyboard.isDown("d") and not love.keyboard.isDown('lshift') then  
-        player.x = player.x + player.speed     
+        vx = player.speed   
         player.anim = player.animations.right
         if not player.isJumping then
             player.isMoving = true
             player.isMovingLeft = false
         end
-    end
+    
 
-    if love.keyboard.isDown("d") and love.keyboard.isDown('lshift') then
-        player.x = player.x + player.maxSpeed
+    elseif love.keyboard.isDown("d") and love.keyboard.isDown('lshift') then
+        vx = player.maxSpeed
         player.anim = player.animations.right
         if not player.isJumping then
             player.isMoving = true
             player.isMovingLeft = false
         end
-    end
+    
 
-    if love.keyboard.isDown("a") and not love.keyboard.isDown('lshift') then
-        player.x = player.x + player.speed * -1
+    elseif love.keyboard.isDown("a") and not love.keyboard.isDown('lshift') then
+        vx = player.speed
         player.anim = player.animations.right
         if not player.isJumping then
             player.isMoving = true
             player.isMovingLeft = true
         end
-    end
+    
 
-    if love.keyboard.isDown("a") and love.keyboard.isDown('lshift') then
-        player.x = player.x + player.maxSpeed * -1
+    elseif love.keyboard.isDown("a") and love.keyboard.isDown('lshift') then
+        vx = player.maxSpeed
         player.anim = player.animations.right
         if not player.isJumping then
             player.isMoving = true
             player.isMovingLeft = true
         end
-    end
+    else
+        vx = 0
+        player.isMoving = false
+	end
 
     if love.keyboard.isDown('space') then
-        if player.y_velocity == 0 then
-            player.y_velocity = player.jump_height
-        end
+		if player.y_velocity == 0 then
+			player.y_velocity = player.jump_height
+		end
     end
 
 	if player.y_velocity ~= 0 then
-		player.y = player.y + player.y_velocity * dt
+		vy = player.y_velocity * dt
 		player.y_velocity = player.y_velocity - player.gravity * dt
         player.isJumping = true
 	end
 
-	if player.y > player.ground then
+	if vy > 0 then
 		player.y_velocity = 0
-    	player.y = player.ground
+    	vy = 0
 	end
     
     if player.isJumping then
@@ -118,20 +122,21 @@ function love.update(dt)
     elseif not player.isMoving and not player.isJumping then
         player.anim = player.animations.right
         player.anim:gotoFrame(4)
+        vx = 0
     end
 
-    --player.collider:setLinearVelocity(vx, vy)
+    player.collider:setLinearVelocity(vx, vy)
     
-    world:update(dt)
     if isMovingLeft then
-        player.collider:setX(player.x + 12)
+        player.x = player.collider:getX() - 8
     else
-        player.collider:setX(player.x + 8) 
+        player.x = player.collider:getX() - 8 
     end
-    player.collider:setY(player.y + 9)
+    player.y = player.collider:getY() - 8
 
     player.anim:update(dt)
 
+world:update(dt)
 
     cam:lookAt(player.x, player.y)
 
