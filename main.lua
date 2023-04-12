@@ -107,7 +107,7 @@ function love.update(dt)
 
 	if player.y_velocity ~= 0 then
 		vy = player.y_velocity * dt
-		player.y_velocity = player.y_velocity - player.gravity * dt
+		player.y_velocity = player.y_velocity -( player.gravity * dt )
         player.isJumping = true
 	end
 
