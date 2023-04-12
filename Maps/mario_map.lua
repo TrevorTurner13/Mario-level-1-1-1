@@ -10,7 +10,7 @@ return {
   tilewidth = 16,
   tileheight = 16,
   nextlayerid = 4,
-  nextobjectid = 65,
+  nextobjectid = 66,
   properties = {},
   tilesets = {
     {
@@ -157,7 +157,7 @@ return {
       type = "objectgroup",
       draworder = "topdown",
       id = 3,
-      name = "Object Layer 1",
+      name = "Walls",
       class = "",
       visible = true,
       opacity = 1,
