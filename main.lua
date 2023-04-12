@@ -16,8 +16,8 @@ function love.load()
 
     player.x = 0 
     player.y = 270
-    player.speed = 150
-    player.maxSpeed = 225
+    player.speed = 15000
+    player.maxSpeed = 30000
     player.spriteSheet = love.graphics.newImage('Sprites/Mario.png')
     player.smallMarioGrid = anim8.newGrid( 16, 16, player.spriteSheet:getWidth(), player.spriteSheet:getHeight())
     player.bigMarioGrid = anim8.newGrid(16, 32, player.spriteSheet:getWidth(), player.spriteSheet:getHeight(), 0, 16)
@@ -61,7 +61,7 @@ function love.update(dt)
    
 
     if love.keyboard.isDown("d") and not love.keyboard.isDown('lshift') then  
-        vx = player.speed     
+        vx = player.speed 
         player.anim = player.animations.right
         if not player.isJumping then
             player.isMoving = true
@@ -79,7 +79,7 @@ function love.update(dt)
     
 
     elseif love.keyboard.isDown("a") and not love.keyboard.isDown('lshift') then
-        vx = player.speed * -1
+        vx = player.speed *  -1
         player.anim = player.animations.right
         if not player.isJumping then
             player.isMoving = true
@@ -125,7 +125,7 @@ function love.update(dt)
         vx = 0
     end
 
-    player.collider:setLinearVelocity(vx, vy)
+    player.collider:setLinearVelocity(vx * dt, vy)
     
     if isMovingLeft then
         player.x = player.collider:getX() - 8
