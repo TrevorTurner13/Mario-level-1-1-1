@@ -122,7 +122,7 @@ end
 function love.update(dt)
 
     world:update(dt)
-    if not player.isDead and not player.isDeadAnimDone then
+    if not player.isDead and not player.isDeadAnimDone and not player.win then
         sounds.music:play()
         player.isMoving = false
         if not gambu.isDead then
@@ -212,6 +212,7 @@ function love.update(dt)
             if key == 'space' and player.is_on_ground then
                 player.collider:applyLinearImpulse(0, -275)
                 player.is_on_ground = false
+                sounds.jump:play()
             end
         end
         
@@ -235,13 +236,6 @@ function love.update(dt)
             player.anim:gotoFrame(4)
         end
 
-        if player.collider:enter('killEnemy') then
-            local collision_data = player.collider:getEnterCollisionData('killEnemy')
-            local gambu = collision_data.collider:getObject()
-            player.collider:applyLinearImpulse(0, -275)
-            gambu.isDead = true
-        end
-
         if player.collider:enter('fall') then
             local collision_data = player.collider:getEnterCollisionData('fall')
             local fall = collision_data.collider:getObject()
@@ -257,7 +251,10 @@ function love.update(dt)
 
         if player.isDead and not player.deathAnimDone then
             sounds.music:pause()
-            gambu.collider1:setType('dynamic')
+            if not gambu.isDead then
+                gambu.collider1:setType('dynamic')
+            end
+            sounds.die:play()
             player.anim = player.animations.death
             player.collider:applyLinearImpulse(0, -275)
             if timer > 1 then
