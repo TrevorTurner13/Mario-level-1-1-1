@@ -49,6 +49,8 @@ function love.load()
     player = {}
     player.dx = 0 
     player.dy = 0
+    player.speed = 20000
+    player.maxSpeed = 30000
     player.spriteSheet = love.graphics.newImage('Sprites/Mario.png')
     player.smallMarioGrid = anim8.newGrid( 16, 16, player.spriteSheet:getWidth(), player.spriteSheet:getHeight())
     player.bigMarioGrid = anim8.newGrid(16, 32, player.spriteSheet:getWidth(), player.spriteSheet:getHeight(), 0, 16)
@@ -101,6 +103,7 @@ function love.load()
 
     gambu.isDead = false
     gambu.deathAnimDone = false
+    gambu.isMovingRight = true
 
     kapoo = {}
     kapoo.dx = 20
@@ -144,6 +147,7 @@ function love.load()
 
     timer = 0
     timerSpeed = 1
+
     
 end
 
@@ -154,7 +158,7 @@ function love.update(dt)
         sounds.music:play()
         player.isMoving = false
         if not gambu.isDead then
-            gambu.collider:setLinearVelocity(gambu.dx,gambu.dy)
+            
 
             gambu.x = gambu.collider:getX() - 8
             gambu.y = gambu.collider:getY() - 8
@@ -162,6 +166,19 @@ function love.update(dt)
             gambu.collider1:setX(gambu.collider:getX())
             gambu.collider1:setY(gambu.collider:getY() - 10)
 
+            if gambu.isMovingRight and gambu.dx <= 400 then
+                gambu.collider:setLinearVelocity(20,0)
+                if gambu.collider:getX() >= 400 then
+                    gambu.isMovingRight = false
+                end
+            end
+    
+            if gambu.isMovingRight == false and gambu.dx <= 200 then
+                gambu.collider:setLinearVelocity(-20,0)
+                if gambu.collider:getX() <= 200 then
+                    gambu.isMovingRight = true
+                end
+            end
             gambu.anim:update(dt)
             
         end
@@ -341,7 +358,6 @@ function love.update(dt)
             local collision_data = player.colliderSmall:getEnterCollisionData('win')
             local win = collision_data.collider:getObject()
              player.win = true 
-
         end
 
         if player.isDead and not player.deathAnimDone then
@@ -418,6 +434,11 @@ function love.update(dt)
     end
     player.y = player.colliderSmall:getY() - 8
     
+    if player.win or player.isDead then
+        if love.keyboard.isDown("escape") then
+            love.event.quit()
+        end
+    end
 end
 
 function love.draw()
@@ -463,6 +484,6 @@ function love.draw()
             love.graphics.rectangle("line", 250, 250, rectWidth, rectHeight)
             love.graphics.setColor(1, 1, 1) -- set the text color to white
             love.graphics.setFont(love.graphics.newFont(12)) -- change the font size here
-            love.graphics.printf("Mama Mia! You've a done it! Press esc to exit", 250, 310 - rectHeight / 2, rectWidth, "center")
+            love.graphics.printf("Mama Mia! You've a done it! Press ESC to exit game.", 250, 310 - rectHeight / 2, rectWidth, "center")
     end
 end
