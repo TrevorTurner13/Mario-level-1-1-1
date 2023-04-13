@@ -166,19 +166,7 @@ function love.update(dt)
             gambu.collider1:setX(gambu.collider:getX())
             gambu.collider1:setY(gambu.collider:getY() - 10)
 
-            if gambu.isMovingRight and gambu.dx <= 400 then
-                gambu.collider:setLinearVelocity(20,0)
-                if gambu.collider:getX() >= 400 then
-                    gambu.isMovingRight = false
-                end
-            end
-    
-            if gambu.isMovingRight == false and gambu.dx <= 200 then
-                gambu.collider:setLinearVelocity(-20,0)
-                if gambu.collider:getX() <= 200 then
-                    gambu.isMovingRight = true
-                end
-            end
+            
             gambu.anim:update(dt)
             
         end
