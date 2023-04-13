@@ -460,7 +460,7 @@ function love.draw()
         player.anim:draw(player.spriteSheet, player.x, player.y, nil, 1, 1)
     end
     
-    world:draw()
+    --world:draw()
     cam:detach()
 
     if player.isDead then
