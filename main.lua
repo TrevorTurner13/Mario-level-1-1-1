@@ -26,6 +26,7 @@ function love.load()
 
     world:addCollisionClass('Player')
     world:addCollisionClass('Enemy')
+    world:addCollisionClass('killEnemy')
     world:addCollisionClass('WallClass')
 
     walls = {}
@@ -57,29 +58,26 @@ function love.load()
 
     player.isMoving = false
     player.isMovingLeft = false
-    player.isJumping = false
+    player.is_on_ground = false
+    player.isDead = false
+    player.isDeadAnimDone = false
 
     player.collider = world:newBSGRectangleCollider( 0, 0, 16, 16, 0)
     player.collider:setFixedRotation(true)
     player.collider:setCollisionClass('Player')
     player.collider:setObject(player)
-    player.is_on_ground = false
-	player.jump_height = -8000
-	player.gravity = -78000
-    player.isDead = false
-    player.isDeadAnimDone = false
-
-    vx = 0
-    vy = 0
+    
 
     gambu = {}
     gambu.x = 200
     gambu.y = 240
     gambu.spriteSheet = love.graphics.newImage('Sprites/gambu.png')
     gambu.grid = anim8.newGrid( 16, 16, gambu.spriteSheet:getWidth(), gambu.spriteSheet:getHeight())
+    
 
     gambu.animations = {}
     gambu.animations.moving = anim8.newAnimation( gambu.grid( '1-2', 1), 0.06)
+    gambu.animations.dead = anim8.newAnimation( gambu.grid( "3-1", 1), 0.06)
     gambu.anim = gambu.animations.moving
 
     gambu.collider = world:newBSGRectangleCollider(200, 240, 16, 16, 0)
@@ -87,6 +85,18 @@ function love.load()
     gambu.collider:setCollisionClass('Enemy')
     gambu.collider:setObject(gambu)
     gambu.speed = 90
+
+    gambu.collider1 = world:newBSGRectangleCollider(100, 240, 16, 1, 0)
+    gambu.collider1:setType('static')
+    gambu.collider1:setFixedRotation(true)
+    gambu.collider1:setCollisionClass('killEnemy')
+    gambu.collider1:setObject(gambu)
+
+    gambu.isDead = false
+    gambu.deathAnimDone = false
+
+    timer = 0
+    timerSpeed = 1
     
 end
 
@@ -96,18 +106,25 @@ function love.update(dt)
     if not player.isDeadAnimDone then
         sounds.music:play()
         player.isMoving = false
-        player.isJumping = false
+       
     
-        gambu.collider:setLinearVelocity(0, 0)
+        if not gambu.isDead then
+            gambu.collider:setLinearVelocity(0, 0)
 
-        --world.update(dt)
+            gambu.x = gambu.collider:getX() - 8
+            gambu.y = gambu.collider:getY() - 8
+
+            gambu.collider1:setX(gambu.collider:getX())
+            gambu.collider1:setY(gambu.collider:getY() - 10)
+
+            gambu.anim:update(dt)
+        end
 
         if player.collider:enter('WallClass') then
             local collision_data = player.collider:getEnterCollisionData('WallClass')
             local wall = collision_data.collider:getObject()
             player.is_on_ground = true
         end
-
 
         dx , dy = player.collider:getLinearVelocity()
 
@@ -182,13 +199,23 @@ function love.update(dt)
         end
         player.y = player.collider:getY() - 8
 
-        gambu.x = gambu.collider:getX() - 8
-        gambu.y = gambu.collider:getY() - 8
+
+        
+        
+        
 
         if player.collider:enter('Enemy') then
             local collision_data = player.collider:getEnterCollisionData('Enemy')
             local gambu = collision_data.collider:getObject()
             player.isDead = true
+        end
+
+        if player.collider:enter('killEnemy') then
+            local collision_data = player.collider:getEnterCollisionData('killEnemy')
+            local gambu = collision_data.collider:getObject()
+            player.collider:applyLinearImpulse(0, -275)
+            gambu.isDead = true
+            sounds.Squish:play()
         end
 
         if player.isDead then
@@ -198,6 +225,22 @@ function love.update(dt)
             
             player.isDeadAnimDone = true
         end
+
+
+        if gambu.isDead and not gambu.deathAnimDone then
+            gambu.anim = gambu.animations.dead
+            gambu.anim:gotoFrame(1)
+            if timer > 1 then
+                gambu.deathAnimDone = true
+                gambu.collider:destroy()
+                gambu.collider1:destroy()
+                timer = timer - 1
+           end
+      
+           timer = timer + dt * timerSpeed
+            
+        end
+
 
         cam:lookAt(player.x, player.y)
 
@@ -224,7 +267,7 @@ function love.update(dt)
         end
 
         player.anim:update(dt)
-        gambu.anim:update(dt)
+        
 
        
     end
@@ -240,7 +283,12 @@ function love.draw()
     else
         player.anim:draw(player.spriteSheet, player.x, player.y, nil, 1, 1)
     end
-    gambu.anim:draw(gambu.spriteSheet, gambu.x, gambu.y, nil, 1, 1)
+
+    if not gambu.deathAnimDone then
+        gambu.anim:draw(gambu.spriteSheet, gambu.x, gambu.y, nil, 1, 1)
+    end
+    
+    
     
     world:draw()
     cam:detach()
