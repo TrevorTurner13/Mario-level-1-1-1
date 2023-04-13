@@ -1,6 +1,6 @@
 function love.load()
     wf = require 'Libraries/windfield'
-    world = wf.newWorld(0, 40000)
+    world = wf.newWorld(0, 2000)
 
     camera = require 'Libraries/camera'
     cam = camera()
@@ -26,6 +26,19 @@ function love.load()
 
     world:addCollisionClass('Player')
     world:addCollisionClass('Enemy')
+    world:addCollisionClass('WallClass')
+
+    walls = {}
+    
+    if gameMap.layers["Walls"] then 
+        for i, obj in pairs(gameMap.layers["Walls"].objects) do
+            local wall = world:newRectangleCollider(obj.x, obj.y, obj.width, obj.height)
+            wall:setCollisionClass('WallClass')
+            wall:setType('static')
+            table.insert(walls,wall)
+        end
+    end
+    
 
     player = {}
     player.x = 0 
@@ -45,13 +58,13 @@ function love.load()
     player.isMoving = false
     player.isMovingLeft = false
     player.isJumping = false
-    player.onGround = true
 
     player.collider = world:newBSGRectangleCollider( 0, 0, 16, 16, 0)
     player.collider:setFixedRotation(true)
     player.collider:setCollisionClass('Player')
     player.collider:setObject(player)
-	player.jump_height = -80000
+    player.is_on_ground = false
+	player.jump_height = -8000
 	player.gravity = -78000
     player.isDead = false
     player.isDeadAnimDone = false
@@ -75,85 +88,88 @@ function love.load()
     gambu.collider:setObject(gambu)
     gambu.speed = 90
     
-
-    walls = {}
-    if gameMap.layers["Walls"] then 
-        for i, obj in pairs(gameMap.layers["Walls"].objects) do
-            local wall = world:newRectangleCollider(obj.x, obj.y, obj.width, obj.height)
-            wall:setType('static')
-            table.insert(walls,wall)
-        end
-    end
 end
 
 function love.update(dt)
+
+    world:update(dt)
     if not player.isDeadAnimDone then
         sounds.music:play()
         player.isMoving = false
         player.isJumping = false
-        
-        player.collider:setLinearVelocity(vx, vy)
+    
         gambu.collider:setLinearVelocity(0, 0)
 
+        --world.update(dt)
+
+        if player.collider:enter('WallClass') then
+            local collision_data = player.collider:getEnterCollisionData('WallClass')
+            local wall = collision_data.collider:getObject()
+            player.is_on_ground = true
+        end
+
+
+        dx , dy = player.collider:getLinearVelocity()
+
         if love.keyboard.isDown("d") and not love.keyboard.isDown('lshift') then  
-            vx = player.speed * dt
+            player.collider:setLinearVelocity(200,dy)
             player.anim = player.animations.right
-            print(vx)
             if not player.isJumping then
                 player.isMoving = true
                 player.isMovingLeft = false
             end
         
         elseif love.keyboard.isDown("d") and love.keyboard.isDown('lshift') then
-            vx = player.maxSpeed * dt
+            player.collider:setLinearVelocity(200,dy)
             player.anim = player.animations.right
-            print(vx)
             if not player.isJumping then
                 player.isMoving = true
                 player.isMovingLeft = false
             end
         
         elseif love.keyboard.isDown("a") and not love.keyboard.isDown('lshift') then
-            vx = player.speed * dt * -1
+            player.collider:setLinearVelocity(-200,dy)
             player.anim = player.animations.right
-            print(vx)
             if not player.isJumping then
                 player.isMoving = true
                 player.isMovingLeft = true
             end
         
         elseif love.keyboard.isDown("a") and love.keyboard.isDown('lshift') then
-            vx = player.maxSpeed * dt * -1
+            player.collider:setLinearVelocity(-200,dy)
             player.anim = player.animations.right
-            print(vx)
             if not player.isJumping then
                 player.isMoving = true
                 player.isMovingLeft = true
             end
         else
-            vx = 0
+            player.collider:setLinearVelocity(dx,dy)
             player.isMoving = false
         end
 
-        if love.keyboard.isDown('space') then
-            if not player.isJumping then
-                vy = player.jump_height
-                sounds.jump:play()
-                print(vx)
-                player.isJumping = true
+        function love.keypressed(key)
+            if key == 'space' and player.is_on_ground then
+                player.collider:applyLinearImpulse(0, -275)
+                player.is_on_ground = false
             end
         end
-
-        if player.isJumping then
-            vy =  player.jump_height * dt
-            vy = vy - (player.gravity * dt)
-            print(vy)
+        
+        function love.keyreleased(key)
+            -- because love2d uses a physics engine
+            -- all force puts inertia onto a body.
+            -- We need to stop the body inertia 
+            -- once we are not longer pressing a key
+            if key == 'd' or key == 'a' then
+                -- again, we need to keep the y component
+                dx , dy = player.collider:getLinearVelocity()
+                player.collider:setLinearVelocity(0,dy)
+            end
         end
         
-        if player.isJumping then
+        if not player.is_on_ground then
             player.anim = player.animations.jump
             player.anim:gotoFrame(1)
-        elseif not player.isMoving and not player.isJumping then
+        elseif not player.isMoving and player.is_on_ground then
             player.anim = player.animations.right
             player.anim:gotoFrame(4)
             vx = 0
@@ -179,16 +195,7 @@ function love.update(dt)
             sounds.music:pause()
             player.anim = player.animations.death
             player.anim:gotoFrame(1)
-            vx = 0
-            if player.y_velocity == 0 then
-                player.y_velocity = player.jump_height
-                sounds.die:play()
-            end
-            if player.y_velocity ~= 0 then
-                vy = player.y_velocity * dt
-                player.y_velocity = player.y_velocity - player.gravity * dt
-                player.isJumping = true
-            end
+            
             player.isDeadAnimDone = true
         end
 
@@ -219,7 +226,7 @@ function love.update(dt)
         player.anim:update(dt)
         gambu.anim:update(dt)
 
-        world:update(dt)
+       
     end
 end
 
