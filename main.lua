@@ -42,8 +42,8 @@ function love.load()
     
 
     player = {}
-    player.x = 0 
-    player.y = 270
+    player.dx = 0 
+    player.dy = 0
     player.speed = 20000
     player.maxSpeed = 30000
     player.spriteSheet = love.graphics.newImage('Sprites/Mario.png')
@@ -60,31 +60,28 @@ function love.load()
     player.isMovingLeft = false
     player.is_on_ground = false
     player.isDead = false
-    player.isDeadAnimDone = false
+    player.deathAnimDone = false
 
     player.collider = world:newBSGRectangleCollider( 0, 0, 16, 16, 0)
     player.collider:setFixedRotation(true)
     player.collider:setCollisionClass('Player')
     player.collider:setObject(player)
     
-
     gambu = {}
-    gambu.x = 200
-    gambu.y = 240
+    gambu.dx = 50
+    gambu.dy = 0
     gambu.spriteSheet = love.graphics.newImage('Sprites/gambu.png')
     gambu.grid = anim8.newGrid( 16, 16, gambu.spriteSheet:getWidth(), gambu.spriteSheet:getHeight())
     
-
     gambu.animations = {}
-    gambu.animations.moving = anim8.newAnimation( gambu.grid( '1-2', 1), 0.06)
+    gambu.animations.moving = anim8.newAnimation( gambu.grid( '1-2', 1), 0.1)
     gambu.animations.dead = anim8.newAnimation( gambu.grid( "3-1", 1), 0.06)
     gambu.anim = gambu.animations.moving
 
-    gambu.collider = world:newBSGRectangleCollider(200, 240, 16, 16, 0)
+    gambu.collider = world:newBSGRectangleCollider(300, 270, 16, 16, 0)
     gambu.collider:setFixedRotation(true)
     gambu.collider:setCollisionClass('Enemy')
     gambu.collider:setObject(gambu)
-    gambu.speed = 90
 
     gambu.collider1 = world:newBSGRectangleCollider(100, 240, 16, 1, 0)
     gambu.collider1:setType('static')
@@ -103,13 +100,12 @@ end
 function love.update(dt)
 
     world:update(dt)
-    if not player.isDeadAnimDone then
+    if not player.isDead and not player.isDeadAnimDone then
         sounds.music:play()
         player.isMoving = false
-       
-    
+
         if not gambu.isDead then
-            gambu.collider:setLinearVelocity(0, 0)
+            gambu.collider:setLinearVelocity(gambu.dx,gambu.dy)
 
             gambu.x = gambu.collider:getX() - 8
             gambu.y = gambu.collider:getY() - 8
@@ -118,6 +114,7 @@ function love.update(dt)
             gambu.collider1:setY(gambu.collider:getY() - 10)
 
             gambu.anim:update(dt)
+            
         end
 
         if player.collider:enter('WallClass') then
@@ -126,10 +123,33 @@ function love.update(dt)
             player.is_on_ground = true
         end
 
-        dx , dy = player.collider:getLinearVelocity()
+        
+        if player.collider:enter('Enemy') then
+            local collision_data = player.collider:getEnterCollisionData('Enemy')
+            local gambu = collision_data.collider:getObject()
+            player.isDead = true
+            sounds.die:play()
+        end
+
+        if player.collider:enter('killEnemy') then
+            local collision_data = player.collider:getEnterCollisionData('killEnemy')
+            local gambu = collision_data.collider:getObject()
+            player.collider:applyLinearImpulse(0, -275)
+            gambu.isDead = true
+            sounds.Squish:play()
+        end
+
+        if gambu.collider:enter('WallClass') then
+            local collision_data = gambu.collider:getEnterCollisionData('WallClass')
+            local wall = collision_data.collider:getObject()
+            gambu.dx, gambu.dy = gambu.collider:getLinearVelocity()
+            gambu.collider:setLinearVelocity(gambu.dx*-1, 0)
+        end
+
+        player.dx , player.dy = player.collider:getLinearVelocity()
 
         if love.keyboard.isDown("d") and not love.keyboard.isDown('lshift') then  
-            player.collider:setLinearVelocity(200,dy)
+            player.collider:setLinearVelocity(200,player.dy)
             player.anim = player.animations.right
             if not player.isJumping then
                 player.isMoving = true
@@ -137,7 +157,7 @@ function love.update(dt)
             end
         
         elseif love.keyboard.isDown("d") and love.keyboard.isDown('lshift') then
-            player.collider:setLinearVelocity(200,dy)
+            player.collider:setLinearVelocity(200,player.dy)
             player.anim = player.animations.right
             if not player.isJumping then
                 player.isMoving = true
@@ -145,7 +165,7 @@ function love.update(dt)
             end
         
         elseif love.keyboard.isDown("a") and not love.keyboard.isDown('lshift') then
-            player.collider:setLinearVelocity(-200,dy)
+            player.collider:setLinearVelocity(-200,player.dy)
             player.anim = player.animations.right
             if not player.isJumping then
                 player.isMoving = true
@@ -153,14 +173,14 @@ function love.update(dt)
             end
         
         elseif love.keyboard.isDown("a") and love.keyboard.isDown('lshift') then
-            player.collider:setLinearVelocity(-200,dy)
+            player.collider:setLinearVelocity(-200,player.dy)
             player.anim = player.animations.right
             if not player.isJumping then
                 player.isMoving = true
                 player.isMovingLeft = true
             end
         else
-            player.collider:setLinearVelocity(dx,dy)
+            player.collider:setLinearVelocity(player.dx,player.dy)
             player.isMoving = false
         end
 
@@ -178,8 +198,8 @@ function love.update(dt)
             -- once we are not longer pressing a key
             if key == 'd' or key == 'a' then
                 -- again, we need to keep the y component
-                dx , dy = player.collider:getLinearVelocity()
-                player.collider:setLinearVelocity(0,dy)
+                player.dx , player.dy = player.collider:getLinearVelocity()
+                player.collider:setLinearVelocity(0,player.dy)
             end
         end
         
@@ -189,41 +209,21 @@ function love.update(dt)
         elseif not player.isMoving and player.is_on_ground then
             player.anim = player.animations.right
             player.anim:gotoFrame(4)
-            vx = 0
-        end
-    
-        if isMovingLeft then
-            player.x = player.collider:getX() - 8
-        else
-            player.x = player.collider:getX() - 8
-        end
-        player.y = player.collider:getY() - 8
-
-
-        
-        
-        
-
-        if player.collider:enter('Enemy') then
-            local collision_data = player.collider:getEnterCollisionData('Enemy')
-            local gambu = collision_data.collider:getObject()
-            player.isDead = true
         end
 
-        if player.collider:enter('killEnemy') then
-            local collision_data = player.collider:getEnterCollisionData('killEnemy')
-            local gambu = collision_data.collider:getObject()
-            player.collider:applyLinearImpulse(0, -275)
-            gambu.isDead = true
-            sounds.Squish:play()
-        end
 
-        if player.isDead then
+        if player.isDead and not player.deathAnimDone then
             sounds.music:pause()
+            gambu.collider1:setType('dynamic')
             player.anim = player.animations.death
-            player.anim:gotoFrame(1)
-            
-            player.isDeadAnimDone = true
+            player.collider:applyLinearImpulse(0, -275)
+            if timer > 1 then
+                player.deathAnimDone = true
+                
+                timer = timer - 1
+           end
+      
+           timer = timer + dt * timerSpeed
         end
 
 
@@ -241,6 +241,12 @@ function love.update(dt)
             
         end
 
+        if isMovingLeft then
+            player.x = player.collider:getX() - 8
+        else
+            player.x = player.collider:getX() - 8
+        end
+        player.y = player.collider:getY() - 8
 
         cam:lookAt(player.x, player.y)
 
@@ -268,9 +274,15 @@ function love.update(dt)
 
         player.anim:update(dt)
         
-
-       
     end
+
+    if isMovingLeft then
+        player.x = player.collider:getX() - 8
+    else
+        player.x = player.collider:getX() - 8
+    end
+    player.y = player.collider:getY() - 8
+    
 end
 
 function love.draw()
@@ -278,17 +290,16 @@ function love.draw()
     cam:attach()
         gameMap:drawLayer(gameMap.layers["Tile Layer 1"])
         gameMap:drawLayer(gameMap.layers["Tile Layer 2"])
+    
+
+    if not gambu.deathAnimDone then
+        gambu.anim:draw(gambu.spriteSheet, gambu.x, gambu.y, nil, 1, 1)
+    end
     if player.isMovingLeft then 
         player.anim:draw(player.spriteSheet, player.x + 15, player.y, nil, -1, 1)
     else
         player.anim:draw(player.spriteSheet, player.x, player.y, nil, 1, 1)
     end
-
-    if not gambu.deathAnimDone then
-        gambu.anim:draw(gambu.spriteSheet, gambu.x, gambu.y, nil, 1, 1)
-    end
-    
-    
     
     world:draw()
     cam:detach()
