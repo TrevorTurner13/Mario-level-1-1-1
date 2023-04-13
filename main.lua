@@ -21,28 +21,30 @@ function love.load()
     sounds.coin:setLooping(false)
     sounds.Squish = love.audio.newSource("sounds/Squish.wav", "stream")
     sounds.Squish:setLooping(false)
+    sounds.kick = love.audio.newSource("sounds/kick.wav", "stream")
+    sounds.kick:setLooping(false)
     sounds.die = love.audio.newSource("sounds/Die.wav", "stream")
     sounds.die:setLooping(false)
 
     world:addCollisionClass('Player')
     world:addCollisionClass('Enemy')
-    world:addCollisionClass('killEnemy')
+    world:addCollisionClass('KillGambu')
+    world:addCollisionClass('ShellKapoo')
     world:addCollisionClass('fall')
-    world:addCollisionClass('WallClass')
+    world:addCollisionClass('Platforms')
     world:addCollisionClass('win')
+    world:addCollisionClass('Walls')
 
     walls = {}
     
     if gameMap.layers["Walls"] then 
         for i, obj in pairs(gameMap.layers["Walls"].objects) do
             local wall = world:newRectangleCollider(obj.x, obj.y, obj.width, obj.height)
-            wall:setCollisionClass('WallClass')
+            wall:setCollisionClass('Platforms')
             wall:setType('static')
             table.insert(walls,wall)
         end
     end
-
-    
 
     player = {}
     player.dx = 0 
@@ -55,6 +57,9 @@ function love.load()
     player.animations.right = anim8.newAnimation( player.smallMarioGrid( '4-1', 1), 0.06)
     player.animations.jump = anim8.newAnimation( player.smallMarioGrid( '6-1 ', 1), 0.06)
     player.animations.death = anim8.newAnimation( player.smallMarioGrid( '7-6', 1), 0.06)
+    player.animations.rightBig = anim8.newAnimation( player.bigMarioGrid( '4-1', 1), 0.06)
+    player.animations.jumpBig = anim8.newAnimation( player.bigMarioGrid( '6-1 ', 1), 0.06)
+    player.animations.deathBig = anim8.newAnimation( player.bigMarioGrid( '7-6', 1), 0.06)
     player.anim = player.animations.right
 
     player.isMoving = false
@@ -63,13 +68,17 @@ function love.load()
     player.isDead = false
     player.deathAnimDone = false
 
-    player.collider = world:newBSGRectangleCollider( 0, 0, 16, 16, 0)
-    player.collider:setFixedRotation(true)
-    player.collider:setCollisionClass('Player')
-    player.collider:setObject(player)
+    player.colliderSmall = world:newBSGRectangleCollider( 0, 0, 16, 16, 0)
+    player.colliderSmall:setFixedRotation(true)
+    player.colliderSmall:setCollisionClass('Player')
+    player.colliderSmall:setObject(player)
+    --player.colliderBig = world:newBSGRectangleCollider( 0, 0, 16, 16, 0)
+   -- player.colliderBig:setFixedRotation(true)
+    --player.colliderBig:setCollisionClass('Player')
+    --player.colliderBig:setObject(player)
     
     gambu = {}
-    gambu.dx = 50
+    gambu.dx = 20
     gambu.dy = 0
     gambu.spriteSheet = love.graphics.newImage('Sprites/gambu.png')
     gambu.grid = anim8.newGrid( 16, 16, gambu.spriteSheet:getWidth(), gambu.spriteSheet:getHeight())
@@ -87,11 +96,37 @@ function love.load()
     gambu.collider1 = world:newBSGRectangleCollider(100, 240, 16, 1, 0)
     gambu.collider1:setType('static')
     gambu.collider1:setFixedRotation(true)
-    gambu.collider1:setCollisionClass('killEnemy')
+    gambu.collider1:setCollisionClass('KillGambu')
     gambu.collider1:setObject(gambu)
 
     gambu.isDead = false
     gambu.deathAnimDone = false
+
+    kapoo = {}
+    kapoo.dx = 20
+    kapoo.dy = 0
+    kapoo.spriteSheet = love.graphics.newImage('Sprites/kapoo.png')
+    kapoo.walkGrid = anim8.newGrid( 16, 24, kapoo.spriteSheet:getWidth(), kapoo.spriteSheet:getHeight())
+    kapoo.shellGrid = anim8.newGrid( 16, 16, kapoo.spriteSheet:getWidth(), kapoo.spriteSheet:getHeight(), 0, 8)
+
+    kapoo.animations = {}
+    kapoo.animations.moving = anim8.newAnimation( kapoo.walkGrid( '1-2', 1), 0.1)
+    kapoo.animations.shell = anim8.newAnimation( kapoo.shellGrid( '4-3', 1), 0.1)
+    kapoo.anim = kapoo.animations.moving
+
+    kapoo.collider = world:newBSGRectangleCollider(100, 270, 16, 24, 0)
+    kapoo.collider:setFixedRotation(true)
+    kapoo.collider:setCollisionClass('Enemy')
+    kapoo.collider:setObject(kapoo)
+
+    kapoo.collider1 = world:newBSGRectangleCollider(100, 240, 16, 1, 0)
+    kapoo.collider1:setType('static')
+    kapoo.collider1:setFixedRotation(true)
+    kapoo.collider1:setCollisionClass('ShellKapoo')
+    kapoo.collider1:setObject(kapoo)
+
+    kapoo.isDead = false
+    kapoo.shellHit = false
 
     fall = {}
     fall.collider = world:newBSGRectangleCollider( 0, 320, 3680, 2, 0)
@@ -106,10 +141,6 @@ function love.load()
     win.collider:setType('static')
     win.collider:setCollisionClass('win')
     win.collider:setObject(win)
-
-
-    vx = 0
-    vy = 0
 
     timer = 0
     timerSpeed = 1
@@ -134,43 +165,110 @@ function love.update(dt)
             gambu.anim:update(dt)
             
         end
+
+        if not kapoo.isDead and not kapoo.shellHit then
+            kapoo.collider:setLinearVelocity(kapoo.dx, kapoo.dy)
+
+            kapoo.x = kapoo.collider:getX() - 8
+            kapoo.y = kapoo.collider:getY() - 12
+
+            kapoo.collider1:setX(kapoo.collider:getX())
+            kapoo.collider1:setY(kapoo.collider:getY() - 13)
+
+            kapoo.anim:update(dt)
+        elseif kapoo.shellHit then
+            kapoo.collider:setLinearVelocity(kapoo.dx, kapoo.dy)
+
+            kapoo.x = kapoo.collider:getX() - 8
+            kapoo.y = kapoo.collider:getY() - 8
+
+            kapoo.collider1:setX(kapoo.collider:getX())
+            kapoo.collider1:setY(kapoo.collider:getY() - 10)
+            kapoo.anim:gotoFrame(2)
+            kapoo.anim:update(dt)
+        end
        
 
         --world.update(dt)
 
-        if player.collider:enter('WallClass') then
-            local collision_data = player.collider:getEnterCollisionData('WallClass')
+        if player.colliderSmall:enter('Platforms') then
+            local collision_data = player.colliderSmall:getEnterCollisionData('Platforms')
             local wall = collision_data.collider:getObject()
             player.is_on_ground = true
         end
 
         
-        if player.collider:enter('Enemy') then
-            local collision_data = player.collider:getEnterCollisionData('Enemy')
+        if player.colliderSmall:enter('Enemy') then
+            local collision_data = player.colliderSmall:getEnterCollisionData('Enemy')
             local gambu = collision_data.collider:getObject()
             player.isDead = true
             sounds.die:play()
         end
 
-        if player.collider:enter('killEnemy') then
-            local collision_data = player.collider:getEnterCollisionData('killEnemy')
-            local gambu = collision_data.collider:getObject()
-            player.collider:applyLinearImpulse(0, -275)
+        if player.colliderSmall:enter('KillGambu') then
+            local collision_data = player.colliderSmall:getEnterCollisionData('KillGambu')
+            local enemy = collision_data.collider:getObject()
+            player.colliderSmall:applyLinearImpulse(0, -275)
             gambu.isDead = true
             sounds.Squish:play()
         end
 
-        if gambu.collider:enter('WallClass') then
-            local collision_data = gambu.collider:getEnterCollisionData('WallClass')
-            local wall = collision_data.collider:getObject()
-            gambu.dx, gambu.dy = gambu.collider:getLinearVelocity()
-            gambu.collider:setLinearVelocity(gambu.dx*-1, 0)
+        if player.colliderSmall:enter('ShellKapoo') and not kapoo.shellHit then
+            local collision_data = player.colliderSmall:getEnterCollisionData('ShellKapoo')
+            local enemy = collision_data.collider:getObject()
+            player.colliderSmall:applyLinearImpulse(0, -275)
+            kapoo.shellHit = true
+            sounds.kick:play()
+            kapoo.dx = 0
+            kapoo.anim = kapoo.animations.shell
+            
+            local tempx = kapoo.collider:getX()
+            local tempy = kapoo.collider:getY()
+            kapoo.collider:destroy()
+            kapoo.collider = world:newBSGRectangleCollider(tempx, tempy, 16, 16, 0)
+            kapoo.collider:setFixedRotation(true)
+            kapoo.collider:setCollisionClass('Enemy')
+            kapoo.collider:setObject(kapoo)
+            kapoo.x = kapoo.collider:getX() - 8
+            kapoo.y = kapoo.collider:getY() - 500
+
+            kapoo.collider1:setX(kapoo.collider:getX())
+            kapoo.collider1:setY(kapoo.collider:getY() - 5)
+
+        elseif player.colliderSmall:enter('ShellKapoo') and kapoo.shellHit then
+            local collision_data = player.colliderSmall:getEnterCollisionData('ShellKapoo')
+            local enemy = collision_data.collider:getObject()
+            player.colliderSmall:applyLinearImpulse(0, -275)
+            sounds.kick:play()
+            kapoo.dx = 150
         end
 
-        player.dx , player.dy = player.collider:getLinearVelocity()
+        if kapoo.collider:enter('Enemy') and kapoo.shellHit then
+            local collision_data = kapoo.collider:getEnterCollisionData('Enemy')
+            local enemy = collision_data.collider:getObject()
+            kapoo.dx = kapoo.dx*-1
+            gambu.isDead = true
+            sounds.Squish:play()
+        end
+
+        if kapoo.collider:enter('Enemy') and not kapoo.shellHit then
+            local collision_data = kapoo.collider:getEnterCollisionData('Enemy')
+            local enemy = collision_data.collider:getObject()
+            kapoo.dx = kapoo.dx*-1
+            gambu.dx = gambu.dx*-1
+        end
+
+        if gambu.collider:enter('Platforms') then
+            local collision_data = gambu.collider:getEnterCollisionData('Platforms')
+            local wall = collision_data.collider:getObject()
+            gambu.dx, gambu.dy = gambu.collider:getLinearVelocity()
+            gambu.dx = gambu.dx * -1
+        end
+
+        player.dx , player.dy = player.colliderSmall:getLinearVelocity()
 
         if love.keyboard.isDown("d") and not love.keyboard.isDown('lshift') then  
-            player.collider:setLinearVelocity(200,player.dy)
+            player.colliderSmall:setLinearVelocity(200,player.dy)
             player.anim = player.animations.right
             if not player.isJumping then
                 player.isMoving = true
@@ -178,7 +276,7 @@ function love.update(dt)
             end
         
         elseif love.keyboard.isDown("d") and love.keyboard.isDown('lshift') then
-            player.collider:setLinearVelocity(200,player.dy)
+            player.colliderSmall:setLinearVelocity(200,player.dy)
             player.anim = player.animations.right
             if not player.isJumping then
                 player.isMoving = true
@@ -186,7 +284,7 @@ function love.update(dt)
             end
         
         elseif love.keyboard.isDown("a") and not love.keyboard.isDown('lshift') then
-            player.collider:setLinearVelocity(-200,player.dy)
+            player.colliderSmall:setLinearVelocity(-200,player.dy)
             player.anim = player.animations.right
             if not player.isJumping then
                 player.isMoving = true
@@ -194,20 +292,20 @@ function love.update(dt)
             end
         
         elseif love.keyboard.isDown("a") and love.keyboard.isDown('lshift') then
-            player.collider:setLinearVelocity(-200,player.dy)
+            player.colliderSmall:setLinearVelocity(-200,player.dy)
             player.anim = player.animations.right
             if not player.isJumping then
                 player.isMoving = true
                 player.isMovingLeft = true
             end
         else
-            player.collider:setLinearVelocity(player.dx,player.dy)
+            player.colliderSmall:setLinearVelocity(player.dx,player.dy)
             player.isMoving = false
         end
 
         function love.keypressed(key)
             if key == 'space' and player.is_on_ground then
-                player.collider:applyLinearImpulse(0, -275)
+                player.colliderSmall:applyLinearImpulse(0, -275)
                 player.is_on_ground = false
                 sounds.jump:play()
             end
@@ -220,8 +318,8 @@ function love.update(dt)
             -- once we are not longer pressing a key
             if key == 'd' or key == 'a' then
                 -- again, we need to keep the y component
-                player.dx , player.dy = player.collider:getLinearVelocity()
-                player.collider:setLinearVelocity(0,player.dy)
+                player.dx , player.dy = player.colliderSmall:getLinearVelocity()
+                player.colliderSmall:setLinearVelocity(0,player.dy)
             end
         end
         
@@ -233,14 +331,14 @@ function love.update(dt)
             player.anim:gotoFrame(4)
         end
 
-        if player.collider:enter('fall') then
-            local collision_data = player.collider:getEnterCollisionData('fall')
+        if player.colliderSmall:enter('fall') then
+            local collision_data = player.colliderSmall:getEnterCollisionData('fall')
             local fall = collision_data.collider:getObject()
             player.isDead = true
         end
 
-        if player.collider:enter('win') then
-            local collision_data = player.collider:getEnterCollisionData('win')
+        if player.colliderSmall:enter('win') then
+            local collision_data = player.colliderSmall:getEnterCollisionData('win')
             local win = collision_data.collider:getObject()
              player.win = true 
 
@@ -253,7 +351,7 @@ function love.update(dt)
             end
             sounds.die:play()
             player.anim = player.animations.death
-            player.collider:applyLinearImpulse(0, -275)
+            player.colliderSmall:applyLinearImpulse(0, -275)
             if timer > 1 then
                 player.deathAnimDone = true
                 
@@ -279,11 +377,11 @@ function love.update(dt)
         end
 
         if isMovingLeft then
-            player.x = player.collider:getX() - 8
+            player.x = player.colliderSmall:getX() - 8
         else
-            player.x = player.collider:getX() - 8
+            player.x = player.colliderSmall:getX() - 8
         end
-        player.y = player.collider:getY() - 8
+        player.y = player.colliderSmall:getY() - 8
 
         cam:lookAt(player.x, player.y)
 
@@ -314,11 +412,11 @@ function love.update(dt)
     end
 
     if isMovingLeft then
-        player.x = player.collider:getX() - 8
+        player.x = player.colliderSmall:getX() - 8
     else
-        player.x = player.collider:getX() - 8
+        player.x = player.colliderSmall:getX() - 8
     end
-    player.y = player.collider:getY() - 8
+    player.y = player.colliderSmall:getY() - 8
     
 end
 
@@ -332,13 +430,16 @@ function love.draw()
     if not gambu.deathAnimDone then
         gambu.anim:draw(gambu.spriteSheet, gambu.x, gambu.y, nil, 1, 1)
     end
+   
+        kapoo.anim:draw(kapoo.spriteSheet, kapoo.x, kapoo.y, nil, 1, 1)
+   
     if player.isMovingLeft then 
         player.anim:draw(player.spriteSheet, player.x + 15, player.y, nil, -1, 1)
     else
         player.anim:draw(player.spriteSheet, player.x, player.y, nil, 1, 1)
     end
     
-    --world:draw()
+    world:draw()
     cam:detach()
 
     if player.isDead then
