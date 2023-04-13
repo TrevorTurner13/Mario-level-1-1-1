@@ -29,6 +29,7 @@ function love.load()
     world:addCollisionClass('killEnemy')
     world:addCollisionClass('fall')
     world:addCollisionClass('WallClass')
+    world:addCollisionClass('win')
 
     walls = {}
     
@@ -71,6 +72,7 @@ function love.load()
 	player.gravity = -78000
     player.isDead = false
     player.isDeadAnimDone = false
+    player.win = false
 
     gambu = {}
     gambu.x = 200
@@ -106,6 +108,13 @@ function love.load()
     fall.collider:setType('static')
     fall.collider:setCollisionClass('fall')
     fall.collider:setObject(fall)
+
+    win = {}
+    win.collider = world:newBSGRectangleCollider( 3497, 200, 2, 200, 0)
+    win.collider:setFixedRotation(true)
+    win.collider:setType('static')
+    win.collider:setCollisionClass('win')
+    win.collider:setObject(win)
 
 
     vx = 0
@@ -243,6 +252,13 @@ function love.update(dt)
             player.isDead = true
         end
 
+        if player.collider:enter('win') then
+            local collision_data = player.collider:getEnterCollisionData('win')
+            local win = collision_data.collider:getObject()
+             player.win = true 
+
+        end
+
         if player.isDead then
             sounds.music:pause()
             player.anim = player.animations.death
@@ -327,6 +343,18 @@ function love.draw()
             love.graphics.rectangle("line", 250, 250, rectWidth, rectHeight)
             love.graphics.setColor(1, 1, 1) -- set the text color to white
             love.graphics.setFont(love.graphics.newFont(12)) -- change the font size here
-            love.graphics.printf("You Failed! Try harder next time! Press ESC to exit game.", 250, 280 - rectHeight / 2, rectWidth, "center")
+            love.graphics.printf("You Failed! Try harder next time! Press ESC to exit game.", 250, 310 - rectHeight / 2, rectWidth, "center")
+    end
+
+    if player.win then
+        local rectWidth, rectHeight = 100, 100 -- change the size of the rectangle here
+            love.graphics.setColor(0, 0, 0) -- set the fill color to black
+            love.graphics.rectangle("fill", 250, 250, rectWidth, rectHeight)
+            love.graphics.setColor(1, 1, 1) -- set the outline color to white
+            love.graphics.setLineWidth(1) -- set the line width to 5
+            love.graphics.rectangle("line", 250, 250, rectWidth, rectHeight)
+            love.graphics.setColor(1, 1, 1) -- set the text color to white
+            love.graphics.setFont(love.graphics.newFont(12)) -- change the font size here
+            love.graphics.printf("Mama Mia! You've a done it!", 250, 310 - rectHeight / 2, rectWidth, "center")
     end
 end
