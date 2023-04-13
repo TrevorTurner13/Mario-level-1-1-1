@@ -319,6 +319,12 @@ function love.update(dt)
         player.x = player.collider:getX() - 8
     end
     player.y = player.collider:getY() - 8
+
+    if player.win or player.isDead then
+        if love.keyboard.isDown("escape") then
+            love.event.quit()
+        end
+    end
     
 end
 
@@ -338,7 +344,7 @@ function love.draw()
         player.anim:draw(player.spriteSheet, player.x, player.y, nil, 1, 1)
     end
     
-    --world:draw()
+    world:draw()
     cam:detach()
 
     if player.isDead then
