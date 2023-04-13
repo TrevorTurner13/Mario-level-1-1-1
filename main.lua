@@ -191,7 +191,6 @@ function love.update(dt)
         handleCollisions()
         --world.update(dt)
 
-        
         player.dx , player.dy = player.colliderSmall:getLinearVelocity()
 
         if love.keyboard.isDown("d") and not love.keyboard.isDown('lshift') then  
@@ -470,7 +469,11 @@ function handleCollisions()
     if gambu.collider:enter('Platforms') then
         local collision_data = gambu.collider:getEnterCollisionData('Platforms')
         local wall = collision_data.collider:getObject()
-        gambu.dx, gambu.dy = gambu.collider:getLinearVelocity()
         gambu.dx = gambu.dx * -1
+    end
+    if kapoo.collider:enter('Platforms') then
+        local collision_data = kapoo.collider:getEnterCollisionData('Platforms')
+        local wall = collision_data.collider:getObject()
+        kapoo.dx = kapoo.dx * -1
     end
 end
