@@ -1,6 +1,6 @@
 function love.load()
     wf = require 'Libraries/windfield'
-    world = wf.newWorld(0, 2000)
+    world = wf.newWorld(0, 800)
 
     camera = require 'Libraries/camera'
     cam = camera()
@@ -42,13 +42,9 @@ function love.load()
         end
     end
 
-    
-
     player = {}
     player.dx = 0 
     player.dy = 0
-    player.speed = 20000
-    player.maxSpeed = 30000
     player.spriteSheet = love.graphics.newImage('Sprites/Mario.png')
     player.smallMarioGrid = anim8.newGrid( 16, 16, player.spriteSheet:getWidth(), player.spriteSheet:getHeight())
     player.bigMarioGrid = anim8.newGrid(16, 32, player.spriteSheet:getWidth(), player.spriteSheet:getHeight(), 0, 16)
@@ -157,7 +153,7 @@ function love.update(dt)
         if player.collider:enter('killEnemy') then
             local collision_data = player.collider:getEnterCollisionData('killEnemy')
             local gambu = collision_data.collider:getObject()
-            player.collider:applyLinearImpulse(0, -275)
+            player.collider:applyLinearImpulse(0, -25)
             gambu.isDead = true
             sounds.Squish:play()
         end
@@ -209,7 +205,7 @@ function love.update(dt)
 
         function love.keypressed(key)
             if key == 'space' and player.is_on_ground then
-                player.collider:applyLinearImpulse(0, -275)
+                player.collider:applyLinearImpulse(0, -170)
                 player.is_on_ground = false
                 sounds.jump:play()
             end
@@ -340,7 +336,7 @@ function love.draw()
         player.anim:draw(player.spriteSheet, player.x, player.y, nil, 1, 1)
     end
     
-    world:draw()
+    --world:draw()
     cam:detach()
 
     if player.isDead then
