@@ -95,7 +95,6 @@ function love.load()
     gambu.isDead = false
     gambu.deathAnimDone = false
 
-
     fall = {}
     fall.collider = world:newBSGRectangleCollider( 0, 320, 3680, 2, 0)
     fall.collider:setFixedRotation(true)
@@ -353,7 +352,7 @@ function love.draw()
             love.graphics.rectangle("line", 250, 250, rectWidth, rectHeight)
             love.graphics.setColor(1, 1, 1) -- set the text color to white
             love.graphics.setFont(love.graphics.newFont(12)) -- change the font size here
-            love.graphics.printf("You Failed! Try harder next time! Press ESC to exit game.", 250, 310 - rectHeight / 2, rectWidth, "center")
+            love.graphics.printf("Oh a No! You a Died! Press ESC to exit game.", 250, 310 - rectHeight / 2, rectWidth, "center")
     end
 
     if player.win then
@@ -365,6 +364,6 @@ function love.draw()
             love.graphics.rectangle("line", 250, 250, rectWidth, rectHeight)
             love.graphics.setColor(1, 1, 1) -- set the text color to white
             love.graphics.setFont(love.graphics.newFont(12)) -- change the font size here
-            love.graphics.printf("Mama Mia! You've a done it!", 250, 310 - rectHeight / 2, rectWidth, "center")
+            love.graphics.printf("Mama Mia! You've a done it! Press esc to exit", 250, 310 - rectHeight / 2, rectWidth, "center")
     end
 end
