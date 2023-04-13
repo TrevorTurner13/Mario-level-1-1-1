@@ -188,83 +188,10 @@ function love.update(dt)
             kapoo.anim:update(dt)
         end
        
-
+        handleCollisions()
         --world.update(dt)
 
-        if player.colliderSmall:enter('Platforms') then
-            local collision_data = player.colliderSmall:getEnterCollisionData('Platforms')
-            local wall = collision_data.collider:getObject()
-            player.is_on_ground = true
-        end
-
         
-        if player.colliderSmall:enter('Enemy') then
-            local collision_data = player.colliderSmall:getEnterCollisionData('Enemy')
-            local gambu = collision_data.collider:getObject()
-            player.isDead = true
-            sounds.die:play()
-        end
-
-        if player.colliderSmall:enter('KillGambu') then
-            local collision_data = player.colliderSmall:getEnterCollisionData('KillGambu')
-            local enemy = collision_data.collider:getObject()
-            player.colliderSmall:applyLinearImpulse(0, -275)
-            gambu.isDead = true
-            sounds.Squish:play()
-        end
-
-        if player.colliderSmall:enter('ShellKapoo') and not kapoo.shellHit then
-            local collision_data = player.colliderSmall:getEnterCollisionData('ShellKapoo')
-            local enemy = collision_data.collider:getObject()
-            player.colliderSmall:applyLinearImpulse(0, -275)
-            kapoo.shellHit = true
-            sounds.kick:play()
-            kapoo.dx = 0
-            kapoo.anim = kapoo.animations.shell
-            
-            local tempx = kapoo.collider:getX()
-            local tempy = kapoo.collider:getY()
-            kapoo.collider:destroy()
-            kapoo.collider = world:newBSGRectangleCollider(tempx, tempy, 16, 16, 0)
-            kapoo.collider:setFixedRotation(true)
-            kapoo.collider:setCollisionClass('Enemy')
-            kapoo.collider:setObject(kapoo)
-            kapoo.x = kapoo.collider:getX() - 8
-            kapoo.y = kapoo.collider:getY() - 500
-
-            kapoo.collider1:setX(kapoo.collider:getX())
-            kapoo.collider1:setY(kapoo.collider:getY() - 5)
-
-        elseif player.colliderSmall:enter('ShellKapoo') and kapoo.shellHit then
-            local collision_data = player.colliderSmall:getEnterCollisionData('ShellKapoo')
-            local enemy = collision_data.collider:getObject()
-            player.colliderSmall:applyLinearImpulse(0, -275)
-            sounds.kick:play()
-            kapoo.dx = 150
-        end
-
-        if kapoo.collider:enter('Enemy') and kapoo.shellHit then
-            local collision_data = kapoo.collider:getEnterCollisionData('Enemy')
-            local enemy = collision_data.collider:getObject()
-            kapoo.dx = kapoo.dx*-1
-            gambu.isDead = true
-            sounds.Squish:play()
-        end
-
-        if kapoo.collider:enter('Enemy') and not kapoo.shellHit then
-            local collision_data = kapoo.collider:getEnterCollisionData('Enemy')
-            local enemy = collision_data.collider:getObject()
-            kapoo.dx = kapoo.dx*-1
-            gambu.dx = gambu.dx*-1
-        end
-
-        if gambu.collider:enter('Platforms') then
-            local collision_data = gambu.collider:getEnterCollisionData('Platforms')
-            local wall = collision_data.collider:getObject()
-            gambu.dx, gambu.dy = gambu.collider:getLinearVelocity()
-            gambu.dx = gambu.dx * -1
-        end
-
         player.dx , player.dy = player.colliderSmall:getLinearVelocity()
 
         if love.keyboard.isDown("d") and not love.keyboard.isDown('lshift') then  
@@ -469,5 +396,81 @@ function love.draw()
             love.graphics.setColor(1, 1, 1) -- set the text color to white
             love.graphics.setFont(love.graphics.newFont(12)) -- change the font size here
             love.graphics.printf("Mama Mia! You've a done it! Press ESC to exit game.", 250, 310 - rectHeight / 2, rectWidth, "center")
+    end
+end
+
+function handleCollisions()
+    if player.colliderSmall:enter('Platforms') then
+        local collision_data = player.colliderSmall:getEnterCollisionData('Platforms')
+        local wall = collision_data.collider:getObject()
+        player.is_on_ground = true
+    end
+
+    
+    if player.colliderSmall:enter('Enemy') then
+        local collision_data = player.colliderSmall:getEnterCollisionData('Enemy')
+        local gambu = collision_data.collider:getObject()
+        player.isDead = true
+        sounds.die:play()
+    end
+
+    if player.colliderSmall:enter('KillGambu') then
+        local collision_data = player.colliderSmall:getEnterCollisionData('KillGambu')
+        local enemy = collision_data.collider:getObject()
+        player.colliderSmall:applyLinearImpulse(0, -275)
+        gambu.isDead = true
+        sounds.Squish:play()
+    end
+
+    if player.colliderSmall:enter('ShellKapoo') and not kapoo.shellHit then
+        local collision_data = player.colliderSmall:getEnterCollisionData('ShellKapoo')
+        local enemy = collision_data.collider:getObject()
+        player.colliderSmall:applyLinearImpulse(0, -275)
+        kapoo.shellHit = true
+        sounds.kick:play()
+        kapoo.dx = 0
+        kapoo.anim = kapoo.animations.shell
+        
+        local tempx = kapoo.collider:getX()
+        local tempy = kapoo.collider:getY()
+        kapoo.collider:destroy()
+        kapoo.collider = world:newBSGRectangleCollider(tempx, tempy, 16, 16, 0)
+        kapoo.collider:setFixedRotation(true)
+        kapoo.collider:setCollisionClass('Enemy')
+        kapoo.collider:setObject(kapoo)
+        kapoo.x = kapoo.collider:getX() - 8
+        kapoo.y = kapoo.collider:getY() - 500
+
+        kapoo.collider1:setX(kapoo.collider:getX())
+        kapoo.collider1:setY(kapoo.collider:getY() - 5)
+
+    elseif player.colliderSmall:enter('ShellKapoo') and kapoo.shellHit then
+        local collision_data = player.colliderSmall:getEnterCollisionData('ShellKapoo')
+        local enemy = collision_data.collider:getObject()
+        player.colliderSmall:applyLinearImpulse(0, -275)
+        sounds.kick:play()
+        kapoo.dx = 150
+    end
+
+    if kapoo.collider:enter('Enemy') and kapoo.shellHit then
+        local collision_data = kapoo.collider:getEnterCollisionData('Enemy')
+        local enemy = collision_data.collider:getObject()
+        kapoo.dx = kapoo.dx*-1
+        gambu.isDead = true
+        sounds.Squish:play()
+    end
+
+    if kapoo.collider:enter('Enemy') and not kapoo.shellHit then
+        local collision_data = kapoo.collider:getEnterCollisionData('Enemy')
+        local enemy = collision_data.collider:getObject()
+        kapoo.dx = kapoo.dx*-1
+        gambu.dx = gambu.dx*-1
+    end
+
+    if gambu.collider:enter('Platforms') then
+        local collision_data = gambu.collider:getEnterCollisionData('Platforms')
+        local wall = collision_data.collider:getObject()
+        gambu.dx, gambu.dy = gambu.collider:getLinearVelocity()
+        gambu.dx = gambu.dx * -1
     end
 end
