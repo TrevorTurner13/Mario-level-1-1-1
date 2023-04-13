@@ -27,7 +27,9 @@ function love.load()
     world:addCollisionClass('Player')
     world:addCollisionClass('Enemy')
     world:addCollisionClass('killEnemy')
+    world:addCollisionClass('fall')
     world:addCollisionClass('WallClass')
+    world:addCollisionClass('win')
 
     walls = {}
     
@@ -39,6 +41,7 @@ function love.load()
             table.insert(walls,wall)
         end
     end
+
     
 
     player = {}
@@ -92,6 +95,25 @@ function love.load()
     gambu.isDead = false
     gambu.deathAnimDone = false
 
+
+    fall = {}
+    fall.collider = world:newBSGRectangleCollider( 0, 320, 3680, 2, 0)
+    fall.collider:setFixedRotation(true)
+    fall.collider:setType('static')
+    fall.collider:setCollisionClass('fall')
+    fall.collider:setObject(fall)
+
+    win = {}
+    win.collider = world:newBSGRectangleCollider( 3497, 200, 2, 200, 0)
+    win.collider:setFixedRotation(true)
+    win.collider:setType('static')
+    win.collider:setCollisionClass('win')
+    win.collider:setObject(win)
+
+
+    vx = 0
+    vy = 0
+
     timer = 0
     timerSpeed = 1
     
@@ -103,7 +125,6 @@ function love.update(dt)
     if not player.isDead and not player.isDeadAnimDone then
         sounds.music:play()
         player.isMoving = false
-
         if not gambu.isDead then
             gambu.collider:setLinearVelocity(gambu.dx,gambu.dy)
 
@@ -116,6 +137,9 @@ function love.update(dt)
             gambu.anim:update(dt)
             
         end
+       
+
+        --world.update(dt)
 
         if player.collider:enter('WallClass') then
             local collision_data = player.collider:getEnterCollisionData('WallClass')
@@ -313,6 +337,18 @@ function love.draw()
             love.graphics.rectangle("line", 250, 250, rectWidth, rectHeight)
             love.graphics.setColor(1, 1, 1) -- set the text color to white
             love.graphics.setFont(love.graphics.newFont(12)) -- change the font size here
-            love.graphics.printf("You Failed! Try harder next time! Press ESC to exit game.", 250, 280 - rectHeight / 2, rectWidth, "center")
+            love.graphics.printf("You Failed! Try harder next time! Press ESC to exit game.", 250, 310 - rectHeight / 2, rectWidth, "center")
+    end
+
+    if player.win then
+        local rectWidth, rectHeight = 100, 100 -- change the size of the rectangle here
+            love.graphics.setColor(0, 0, 0) -- set the fill color to black
+            love.graphics.rectangle("fill", 250, 250, rectWidth, rectHeight)
+            love.graphics.setColor(1, 1, 1) -- set the outline color to white
+            love.graphics.setLineWidth(1) -- set the line width to 5
+            love.graphics.rectangle("line", 250, 250, rectWidth, rectHeight)
+            love.graphics.setColor(1, 1, 1) -- set the text color to white
+            love.graphics.setFont(love.graphics.newFont(12)) -- change the font size here
+            love.graphics.printf("Mama Mia! You've a done it!", 250, 310 - rectHeight / 2, rectWidth, "center")
     end
 end
