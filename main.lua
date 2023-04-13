@@ -49,8 +49,6 @@ function love.load()
     player = {}
     player.dx = 0 
     player.dy = 0
-    player.speed = 20000
-    player.maxSpeed = 30000
     player.spriteSheet = love.graphics.newImage('Sprites/Mario.png')
     player.smallMarioGrid = anim8.newGrid( 16, 16, player.spriteSheet:getWidth(), player.spriteSheet:getHeight())
     player.bigMarioGrid = anim8.newGrid(16, 32, player.spriteSheet:getWidth(), player.spriteSheet:getHeight(), 0, 16)
@@ -103,7 +101,6 @@ function love.load()
 
     gambu.isDead = false
     gambu.deathAnimDone = false
-    gambu.isMovingRight = true
 
     kapoo = {}
     kapoo.dx = 20
@@ -147,7 +144,6 @@ function love.load()
 
     timer = 0
     timerSpeed = 1
-
     
 end
 
@@ -158,7 +154,7 @@ function love.update(dt)
         sounds.music:play()
         player.isMoving = false
         if not gambu.isDead then
-            
+            gambu.collider:setLinearVelocity(gambu.dx,gambu.dy)
 
             gambu.x = gambu.collider:getX() - 8
             gambu.y = gambu.collider:getY() - 8
@@ -166,7 +162,6 @@ function love.update(dt)
             gambu.collider1:setX(gambu.collider:getX())
             gambu.collider1:setY(gambu.collider:getY() - 10)
 
-            
             gambu.anim:update(dt)
             
         end
@@ -346,6 +341,7 @@ function love.update(dt)
             local collision_data = player.colliderSmall:getEnterCollisionData('win')
             local win = collision_data.collider:getObject()
              player.win = true 
+
         end
 
         if player.isDead and not player.deathAnimDone then
