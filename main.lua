@@ -1,6 +1,6 @@
 function love.load()
     wf = require 'Libraries/windfield'
-    world = wf.newWorld(0, 800)
+    world = wf.newWorld(0, 2000)
 
     camera = require 'Libraries/camera'
     cam = camera()
@@ -45,6 +45,7 @@ function love.load()
     player = {}
     player.dx = 0 
     player.dy = 0
+
     player.spriteSheet = love.graphics.newImage('Sprites/Mario.png')
     player.smallMarioGrid = anim8.newGrid( 16, 16, player.spriteSheet:getWidth(), player.spriteSheet:getHeight())
     player.bigMarioGrid = anim8.newGrid(16, 32, player.spriteSheet:getWidth(), player.spriteSheet:getHeight(), 0, 16)
@@ -153,7 +154,7 @@ function love.update(dt)
         if player.collider:enter('killEnemy') then
             local collision_data = player.collider:getEnterCollisionData('killEnemy')
             local gambu = collision_data.collider:getObject()
-            player.collider:applyLinearImpulse(0, -25)
+            player.collider:applyLinearImpulse(0, -275)
             gambu.isDead = true
             sounds.Squish:play()
         end
@@ -205,7 +206,7 @@ function love.update(dt)
 
         function love.keypressed(key)
             if key == 'space' and player.is_on_ground then
-                player.collider:applyLinearImpulse(0, -170)
+                player.collider:applyLinearImpulse(0, -275)
                 player.is_on_ground = false
                 sounds.jump:play()
             end
@@ -241,6 +242,7 @@ function love.update(dt)
             local collision_data = player.collider:getEnterCollisionData('win')
             local win = collision_data.collider:getObject()
              player.win = true 
+
         end
 
         if player.isDead and not player.deathAnimDone then
@@ -317,11 +319,6 @@ function love.update(dt)
     end
     player.y = player.collider:getY() - 8
     
-    if player.win or player.isDead then
-        if love.keyboard.isDown("escape") then
-            love.event.quit()
-        end
-    end
 end
 
 function love.draw()
@@ -364,6 +361,6 @@ function love.draw()
             love.graphics.rectangle("line", 250, 250, rectWidth, rectHeight)
             love.graphics.setColor(1, 1, 1) -- set the text color to white
             love.graphics.setFont(love.graphics.newFont(12)) -- change the font size here
-            love.graphics.printf("Mama Mia! You've a done it! Press ESC to exit game.", 250, 310 - rectHeight / 2, rectWidth, "center")
+            love.graphics.printf("Mama Mia! You've a done it! Press esc to exit", 250, 310 - rectHeight / 2, rectWidth, "center")
     end
 end
