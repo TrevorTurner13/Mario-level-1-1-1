@@ -122,7 +122,7 @@ end
 function love.update(dt)
 
     world:update(dt)
-    if not player.isDead and not player.isDeadAnimDone then
+    if not player.isDead and not player.isDeadAnimDone and not player.win then
         sounds.music:play()
         player.isMoving = false
         if not gambu.isDead then
@@ -212,6 +212,7 @@ function love.update(dt)
             if key == 'space' and player.is_on_ground then
                 player.collider:applyLinearImpulse(0, -275)
                 player.is_on_ground = false
+                sounds.jump:play()
             end
         end
         
@@ -235,13 +236,6 @@ function love.update(dt)
             player.anim:gotoFrame(4)
         end
 
-        if player.collider:enter('killEnemy') then
-            local collision_data = player.collider:getEnterCollisionData('killEnemy')
-            local gambu = collision_data.collider:getObject()
-            player.collider:applyLinearImpulse(0, -275)
-            gambu.isDead = true
-        end
-
         if player.collider:enter('fall') then
             local collision_data = player.collider:getEnterCollisionData('fall')
             local fall = collision_data.collider:getObject()
@@ -252,12 +246,14 @@ function love.update(dt)
             local collision_data = player.collider:getEnterCollisionData('win')
             local win = collision_data.collider:getObject()
              player.win = true 
-
         end
 
         if player.isDead and not player.deathAnimDone then
             sounds.music:pause()
+            if not gambu.isDead then
             gambu.collider1:setType('dynamic')
+            end
+            sounds.die:play()
             player.anim = player.animations.death
             player.collider:applyLinearImpulse(0, -275)
             if timer > 1 then
@@ -326,6 +322,11 @@ function love.update(dt)
     end
     player.y = player.collider:getY() - 8
     
+    if player.win or player.isDead then
+        if love.keyboard.isDown("escape") then
+            love.event.quit()
+        end
+    end
 end
 
 function love.draw()
@@ -344,7 +345,7 @@ function love.draw()
         player.anim:draw(player.spriteSheet, player.x, player.y, nil, 1, 1)
     end
     
-    world:draw()
+    --world:draw()
     cam:detach()
 
     if player.isDead then
@@ -368,6 +369,6 @@ function love.draw()
             love.graphics.rectangle("line", 250, 250, rectWidth, rectHeight)
             love.graphics.setColor(1, 1, 1) -- set the text color to white
             love.graphics.setFont(love.graphics.newFont(12)) -- change the font size here
-            love.graphics.printf("Mama Mia! You've a done it!", 250, 310 - rectHeight / 2, rectWidth, "center")
+            love.graphics.printf("Mama Mia! You've a done it! Press ESC to exit game.", 250, 310 - rectHeight / 2, rectWidth, "center")
     end
 end
