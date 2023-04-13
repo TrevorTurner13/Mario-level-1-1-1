@@ -235,6 +235,25 @@ function love.update(dt)
             player.anim:gotoFrame(4)
         end
 
+        if player.collider:enter('killEnemy') then
+            local collision_data = player.collider:getEnterCollisionData('killEnemy')
+            local gambu = collision_data.collider:getObject()
+            player.collider:applyLinearImpulse(0, -275)
+            gambu.isDead = true
+        end
+
+        if player.collider:enter('fall') then
+            local collision_data = player.collider:getEnterCollisionData('fall')
+            local fall = collision_data.collider:getObject()
+            player.isDead = true
+        end
+
+        if player.collider:enter('win') then
+            local collision_data = player.collider:getEnterCollisionData('win')
+            local win = collision_data.collider:getObject()
+             player.win = true 
+
+        end
 
         if player.isDead and not player.deathAnimDone then
             sounds.music:pause()
