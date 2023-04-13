@@ -27,6 +27,7 @@ function love.load()
     world:addCollisionClass('Player')
     world:addCollisionClass('Enemy')
     world:addCollisionClass('killEnemy')
+    world:addCollisionClass('fall')
     world:addCollisionClass('WallClass')
 
     walls = {}
@@ -39,6 +40,7 @@ function love.load()
             table.insert(walls,wall)
         end
     end
+
     
 
     player = {}
@@ -58,15 +60,17 @@ function love.load()
 
     player.isMoving = false
     player.isMovingLeft = false
-    player.is_on_ground = false
-    player.isDead = false
-    player.isDeadAnimDone = false
+    player.isJumping = false
 
     player.collider = world:newBSGRectangleCollider( 0, 0, 16, 16, 0)
     player.collider:setFixedRotation(true)
     player.collider:setCollisionClass('Player')
     player.collider:setObject(player)
-    
+    player.is_on_ground = false
+	player.jump_height = -8000
+	player.gravity = -78000
+    player.isDead = false
+    player.isDeadAnimDone = false
 
     gambu = {}
     gambu.x = 200
@@ -95,6 +99,18 @@ function love.load()
     gambu.isDead = false
     gambu.deathAnimDone = false
 
+
+    fall = {}
+    fall.collider = world:newBSGRectangleCollider( 0, 320, 3680, 2, 0)
+    fall.collider:setFixedRotation(true)
+    fall.collider:setType('static')
+    fall.collider:setCollisionClass('fall')
+    fall.collider:setObject(fall)
+
+
+    vx = 0
+    vy = 0
+
     timer = 0
     timerSpeed = 1
     
@@ -106,7 +122,7 @@ function love.update(dt)
     if not player.isDeadAnimDone then
         sounds.music:play()
         player.isMoving = false
-       
+        player.isJumping = false
     
         if not gambu.isDead then
             gambu.collider:setLinearVelocity(0, 0)
@@ -119,12 +135,16 @@ function love.update(dt)
 
             gambu.anim:update(dt)
         end
+       
+
+        --world.update(dt)
 
         if player.collider:enter('WallClass') then
             local collision_data = player.collider:getEnterCollisionData('WallClass')
             local wall = collision_data.collider:getObject()
             player.is_on_ground = true
         end
+
 
         dx , dy = player.collider:getLinearVelocity()
 
@@ -215,7 +235,12 @@ function love.update(dt)
             local gambu = collision_data.collider:getObject()
             player.collider:applyLinearImpulse(0, -275)
             gambu.isDead = true
-            sounds.Squish:play()
+        end
+
+        if player.collider:enter('fall') then
+            local collision_data = player.collider:getEnterCollisionData('fall')
+            local fall = collision_data.collider:getObject()
+            player.isDead = true
         end
 
         if player.isDead then
