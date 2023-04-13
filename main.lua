@@ -51,7 +51,6 @@ function love.load()
     player.collider:setFixedRotation(true)
     player.collider:setCollisionClass('Player')
     player.collider:setObject(player)
-	player.y_velocity = 0
 	player.jump_height = -80000
 	player.gravity = -78000
     player.isDead = false
@@ -137,23 +136,18 @@ function love.update(dt)
         end
 
         if love.keyboard.isDown('space') then
-            if player.y_velocity == 0 then
-                player.y_velocity = player.jump_height
+            if not player.isJumping then
+                vy = player.jump_height
                 sounds.jump:play()
                 print(vx)
+                player.isJumping = true
             end
         end
 
-        if player.y_velocity ~= 0 then
-            vy = player.y_velocity * dt
-            player.y_velocity = player.y_velocity - (player.gravity * dt)
-            player.isJumping = true
+        if player.isJumping then
+            vy =  player.jump_height * dt
+            vy = vy - (player.gravity * dt)
             print(vy)
-        end
-
-        if vy > 0 then
-            player.y_velocity = 0
-            vy = 0
         end
         
         if player.isJumping then
