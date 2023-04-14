@@ -29,6 +29,7 @@ function love.load()
     sounds.win:setLooping(false) 
     sounds.item = love.audio.newSource("sounds/item.wav", "stream")
     sounds.item:setLooping(false) 
+    sounds.Powerup = love.audio.newSource("sounds/Powerup.wav", "stream")
 
     world:addCollisionClass('Player')
     world:addCollisionClass('Enemy')
