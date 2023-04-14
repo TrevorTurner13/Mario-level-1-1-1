@@ -270,11 +270,6 @@ function love.update(dt)
         else
             player.dx , player.dy = player.colliderBig:getLinearVelocity()
 
-            
-
-
-
-
             if love.keyboard.isDown("d") and not love.keyboard.isDown('lshift') then  
                 player.colliderBig:setLinearVelocity(150,player.dy)
                 player.anim = player.animations.rightBig
@@ -491,23 +486,25 @@ function love.update(dt)
         end
 
         player.anim:update(dt)
+
+       
+            if player.colliderSmall:enter('Blocks') then
+                local collision_data = player.colliderSmall:getEnterCollisionData('Blocks')
+                local block = collision_data.collider:getObject()
+                for i, c in ipairs(coins)  do
+                    if c.x <= player.x + 18 and c.x >= player.x - 18 then
+                        c.y = c.y - 16
+                        sounds.coin:play()
+                        c.hit = true
+                    end
+                end
+                for i, b in ipairs(blocks) do
+                    if b.x <= player.x + 18 and b.x >= player.x - 18 then
+                        b.hit = true
+                    end
+                end
+            end 
         
-        if player.colliderSmall:enter('Blocks') then
-            local collision_data = player.colliderSmall:getEnterCollisionData('Blocks')
-            local block = collision_data.collider:getObject()
-            for i, c in ipairs(coins)  do
-                if c.x <= player.x + 18 and c.x >= player.x - 18 then
-                    c.y = c.y - 16
-                    sounds.coin:play()
-                    c.hit = true
-                end
-            end
-            for i, b in ipairs(blocks) do
-                if b.x <= player.x + 18 and b.x >= player.x - 18 then
-                    b.hit = true
-                end
-            end
-        end 
         if player.colliderSmall:enter('MushroomBlocks') then
             local collision_data = player.colliderSmall:getEnterCollisionData('MushroomBlocks')
             local block = collision_data.collider:getObject()
@@ -537,7 +534,7 @@ function love.update(dt)
                 local block = collision_data.collider:getObject()
                 for i, c in ipairs(coins)  do
                     if c.x <= player.x + 18 and c.x >= player.x - 18 then
-                        c.y = c.y + 200
+                        c.y = c.y - 16
                         sounds.coin:play()
                         c.hit = true
                     end
