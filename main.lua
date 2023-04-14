@@ -497,7 +497,7 @@ function love.update(dt)
             local block = collision_data.collider:getObject()
             for i, c in ipairs(coins)  do
                 if c.x <= player.x + 18 and c.x >= player.x - 18 then
-                    c.y = c.y + 200
+                    c.y = c.y - 16
                     sounds.coin:play()
                     c.hit = true
                 end
