@@ -761,6 +761,7 @@ function handleCollisions(dt)
         player.colliderBig:setFixedRotation(true)
         player.colliderBig:setCollisionClass('Player')
         player.colliderBig:setObject(player)
+        sounds.Powerup:play()
     end
 
     
