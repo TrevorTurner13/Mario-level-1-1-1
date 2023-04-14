@@ -94,10 +94,30 @@ function love.load()
     coins = {}
     spawnCoins(244, 225)
     spawnCoins(324, 225)
+    spawnCoins(356, 225)
+    spawnCoins(1428, 225)
+    spawnCoins(1684, 161)
+    spawnCoins(1860, 225)
+    spawnCoins(1908, 225)
+    spawnCoins(1956, 225)
+    spawnCoins(1908, 161)
+    spawnCoins(2228, 161)
+    spawnCoins(2244, 161)
+    spawnCoins(2932, 209)
 
-    blocks = {}
+blocks = {}
     spawnBlocks(240, 240)
     spawnBlocks(320, 240)
+    spawnBlocks(352, 240)
+    spawnBlocks(1424, 240)
+    spawnBlocks(1680, 176)
+    spawnBlocks(1856, 240)
+    spawnBlocks(1904, 240)
+    spawnBlocks(1952, 240)
+    spawnBlocks(1904, 176)
+    spawnBlocks(2224, 176)
+    spawnBlocks(2240, 176)
+    spawnBlocks(2928, 224)
 
     fall = {}
     fall.collider = world:newBSGRectangleCollider( 0, 320, 3680, 2, 0)
@@ -381,7 +401,7 @@ function love.draw()
         player.anim:draw(player.spriteSheet, player.x, player.y, nil, 1, 1)
     end
     
-    --world:draw()
+    world:draw()
     cam:detach()
 
     if player.isDead then
@@ -474,7 +494,9 @@ function handleCollisions()
             local enemy = collision_data.collider:getObject()
             k.dx = k.dx*-1
             for i, g in ipairs(gambus) do
+                if g.x <= k.x + 18 and g.x >= k.x - 18 then
                 g.isDead = true
+                end
             end
             sounds.Squish:play()
         end
@@ -486,11 +508,12 @@ function handleCollisions()
             local enemy = collision_data.collider:getObject()
             k.dx = k.dx*-1
             for i, g in ipairs(gambus) do
+                if g.x <= k.x + 18 and g.x >= k.x - 18 then
                 g.dx = g.dx*-1
             end
-        end
+        end                        
     end
-
+end
     for i, g in ipairs(gambus) do
         if g.collider:enter('Platforms') then
             local collision_data = g.collider:getEnterCollisionData('Platforms')
