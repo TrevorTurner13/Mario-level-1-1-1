@@ -291,13 +291,13 @@ function love.update(dt)
             sounds.die:play()
             player.anim = player.animations.death
             player.colliderSmall:applyLinearImpulse(0, -275)
-            if timer > 1 then
+            if player.timer > 1 then
                 player.deathAnimDone = true
                 
-                timer = 0
+                player.timer = 0
            end
       
-           timer = timer + dt
+           player.timer = player.timer + dt
         end
 
         for i, g in ipairs(gambus) do
