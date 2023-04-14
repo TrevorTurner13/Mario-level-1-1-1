@@ -413,7 +413,7 @@ function love.draw()
         player.anim:draw(player.spriteSheet, player.x, player.y, nil, 1, 1)
     end
     
-    --world:draw()
+    world:draw()
     cam:detach()
 
     if player.isDead then
@@ -524,9 +524,9 @@ function handleCollisions()
                     g.dx = g.dx*-1
                 end
             end
-        end
+        end                        
     end
-
+end
     for i, g in ipairs(gambus) do
         if g.collider:enter('Platforms') then
             local collision_data = g.collider:getEnterCollisionData('Platforms')
