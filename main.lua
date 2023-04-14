@@ -27,6 +27,8 @@ function love.load()
     sounds.die:setLooping(false)
     sounds.win = love.audio.newSource("sounds/win.mp3", "stream")
     sounds.win:setLooping(false) 
+    sounds.item = love.audio.newSource("sounds/item.wav", "stream")
+    sounds.item:setLooping(false) 
 
     world:addCollisionClass('Player')
     world:addCollisionClass('Enemy')
@@ -36,6 +38,8 @@ function love.load()
     world:addCollisionClass('Platforms')
     world:addCollisionClass('win')
     world:addCollisionClass('Blocks')
+    world:addCollisionClass('Mushroom')
+    world:addCollisionClass('MushroomBlocks')
 
     walls = {}
     
@@ -69,11 +73,13 @@ function love.load()
     player.is_on_ground = false
     player.isDead = false
     player.deathAnimDone = false
+    player.isBig = false
 
     player.colliderSmall = world:newBSGRectangleCollider( 0, 0, 16, 16, 0)
     player.colliderSmall:setFixedRotation(true)
     player.colliderSmall:setCollisionClass('Player')
     player.colliderSmall:setObject(player)
+    player.timer = 0
     --player.colliderBig = world:newBSGRectangleCollider( 0, 0, 16, 16, 0)
    -- player.colliderBig:setFixedRotation(true)
     --player.colliderBig:setCollisionClass('Player')
@@ -105,7 +111,7 @@ function love.load()
     spawnCoins(2244, 161)
     spawnCoins(2932, 209)
 
-blocks = {}
+    blocks = {}
     spawnBlocks(240, 240)
     spawnBlocks(320, 240)
     spawnBlocks(352, 240)
@@ -118,6 +124,11 @@ blocks = {}
     spawnBlocks(2224, 176)
     spawnBlocks(2240, 176)
     spawnBlocks(2928, 224)
+
+    mushrooms = {}
+   
+    mushroomBlocks = {}
+    spawnMushroomBlocks(336,176)
 
     fall = {}
     fall.collider = world:newBSGRectangleCollider( 0, 320, 3680, 2, 0)
@@ -133,8 +144,7 @@ blocks = {}
     win.collider:setCollisionClass('win')
     win.collider:setObject(win)
 
-    timer = 0
-    timerSpeed = 1
+    
     
 end
 
@@ -315,6 +325,20 @@ function love.update(dt)
             b.y = b.collider:getY() - 17
         end
 
+        for i, mb in ipairs(mushroomBlocks) do
+            if not mb.hit then 
+                mb.x = mb.collider:getX() - 8
+                mb.y = mb.collider:getY() - 17
+            end
+        end
+
+        for i, m in ipairs(mushrooms)  do
+            m.x = m.collider:getX() - 8
+            m.y = m.collider:getY() - 8
+            m.collider:setLinearVelocity(100,m.dy)
+            m.collider:applyLinearImpulse(m.dx, 90)
+            
+        end
         cam:lookAt(player.x, player.y)
 
         local w = love.graphics.getWidth()
@@ -351,7 +375,35 @@ function love.update(dt)
                     c.hit = true
                 end
             end
+            for i, b in ipairs(blocks) do
+                if b.x <= player.x + 18 and b.x >= player.x - 18 then
+                    b.hit = true
+                end
+            end
         end 
+        if player.colliderSmall:enter('MushroomBlocks') then
+            local collision_data = player.colliderSmall:getEnterCollisionData('MushroomBlocks')
+            local block = collision_data.collider:getObject()
+            spawnMushroom(336, 150)
+            for i, m in ipairs(mushrooms)  do
+                m.x = m.collider:getX() - 8
+                m.y = m.collider:getY() - 16
+                m.spawn = true
+                if m.x <= player.x + 18 and m.x >= player.x - 18 then
+                    
+                    sounds.item:play()
+                end
+            end
+            for i, b in ipairs(mushroomBlocks) do
+                if b.x <= player.x + 18 and b.x >= player.x - 18 then
+                    b.hit = true
+                    if b.hit then
+                        b.collider:destroy()
+                    end
+                end
+            end
+        end 
+
 
         for i, c in ipairs(coins) do
             c.anim:update(dt)
@@ -389,9 +441,27 @@ function love.draw()
         c.anim:draw(c.spriteSheet, c.x, c.y, nil, 1, 1)
     end
     
+    
+    for i, m in ipairs(mushrooms) do
+        if m.spawn then
+            love.graphics.draw(m.spriteSheet, m.x, m.y)
+        end
+    end
+
+    for i, mb in ipairs(mushroomBlocks) do
+        if not mb.hit then
+            love.graphics.draw(mb.spriteSheet, mb.x, mb.y)
+        else
+            love.graphics.draw(mb.spriteSheet, mb.x, mb.y)
+        end
+    end
     --coin2.anim:draw(coin1.spriteSheet, coin2.x, coin2.y, nil, 1, 1)
     for i, b in ipairs(blocks) do
-        love.graphics.draw(b.spriteSheet, b.x, b.y)
+        if not b.hit then
+            love.graphics.draw(b.spriteSheet, b.x, b.y)
+        else
+            love.graphics.draw(b.spriteSheet1, b.x, b.y)
+        end
     end
     
     for i, g in ipairs(gambus) do
@@ -413,7 +483,7 @@ function love.draw()
         player.anim:draw(player.spriteSheet, player.x, player.y, nil, 1, 1)
     end
     
-    --world:draw()
+    world:draw()
     cam:detach()
 
     if player.isDead then
@@ -570,12 +640,31 @@ function spawnBlocks(x, y)
     block.dx = 245
     block.dy = 240
     block.spriteSheet = love.graphics.newImage('Sprites/question mark.png')
+    block.spriteSheet1 = love.graphics.newImage('Sprites/blank block.png')
     block.collider = world:newBSGRectangleCollider(x, y, 16, 2, 0)
     block.collider:setFixedRotation(true)
     block.collider:setType('static')
     block.collider:setCollisionClass('Blocks')
     block.collider:setObject(block)
+
+    block.hit = false
     table.insert(blocks, block)
+end
+
+function spawnMushroomBlocks(x, y)
+    local block = {}
+    block.dx = 245
+    block.dy = 240
+    block.spriteSheet = love.graphics.newImage('Sprites/question mark.png')
+    block.spriteSheet1 = love.graphics.newImage('Sprites/blank block.png')
+    block.collider = world:newBSGRectangleCollider(x, y, 16, 2, 0)
+    block.collider:setFixedRotation(true)
+    block.collider:setType('static')
+    block.collider:setCollisionClass('MushroomBlocks')
+    block.collider:setObject(block)
+
+    block.hit = false
+    table.insert(mushroomBlocks, block)
 end
 
 function spawnGambu( x, y)
@@ -635,4 +724,22 @@ function spawnKapoos(x, y)
     kapoo.isDead = false
     kapoo.shellHit = false
     table.insert(kapoos, kapoo)
+end
+
+function spawnMushroom(x, y)
+    local mushroom = {}
+    mushroom.dx = 0
+    mushroom.dy = 0
+    mushroom.timer = 0
+    mushroom.spriteSheet = love.graphics.newImage('Sprites/mushroom.png')
+
+    mushroom.collider = world:newBSGRectangleCollider(x, y, 16, 16, 0)
+    mushroom.collider:setFixedRotation(true)
+    mushroom.collider:setCollisionClass('Mushroom')
+    mushroom.collider:setObject(mushroom)
+
+    mushroom.hit = false
+    mushroom.spawn = false
+    
+    table.insert(mushrooms, mushroom)
 end
