@@ -86,10 +86,13 @@ function love.load()
     spawnGambu(2000, 270)
     spawnGambu(2025, 270)
     spawnGambu(3000, 270)
+    spawnGambu(2125, 270)
+    
 
     kapoos = {}
     spawnKapoos(100, 270)
     spawnKapoos(500, 270)
+    spawnKapoos(1200, 270)
 
     coins = {}
     spawnCoins(244, 225)
@@ -412,7 +415,6 @@ function love.draw()
     else
         player.anim:draw(player.spriteSheet, player.x, player.y, nil, 1, 1)
     end
-    ll
     --world:draw()
     cam:detach()
 
