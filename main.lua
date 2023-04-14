@@ -87,38 +87,17 @@ function love.load()
     spawnGambu(2025, 270)
     spawnGambu(3000, 270)
 
-    kapoo = {}
-    kapoo.dx = 20
-    kapoo.dy = 0
-    kapoo.spriteSheet = love.graphics.newImage('Sprites/kapoo.png')
-    kapoo.walkGrid = anim8.newGrid( 16, 24, kapoo.spriteSheet:getWidth(), kapoo.spriteSheet:getHeight())
-    kapoo.shellGrid = anim8.newGrid( 16, 16, kapoo.spriteSheet:getWidth(), kapoo.spriteSheet:getHeight(), 0, 8)
-
-    kapoo.animations = {}
-    kapoo.animations.moving = anim8.newAnimation( kapoo.walkGrid( '1-2', 1), 0.1)
-    kapoo.animations.shell = anim8.newAnimation( kapoo.shellGrid( '4-3', 1), 0.1)
-    kapoo.anim = kapoo.animations.moving
-
-    kapoo.collider = world:newBSGRectangleCollider(100, 270, 16, 24, 0)
-    kapoo.collider:setFixedRotation(true)
-    kapoo.collider:setCollisionClass('Enemy')
-    kapoo.collider:setObject(kapoo)
-
-    kapoo.collider1 = world:newBSGRectangleCollider(100, 240, 16, 1, 0)
-    kapoo.collider1:setType('static')
-    kapoo.collider1:setFixedRotation(true)
-    kapoo.collider1:setCollisionClass('ShellKapoo')
-    kapoo.collider1:setObject(kapoo)
-
-    kapoo.isDead = false
-    kapoo.shellHit = false
+    kapoos = {}
+    spawnKapoos(100, 270)
+    spawnKapoos(500, 270)
 
     coins = {}
     spawnCoins(244, 225)
-    spawnCoins(300, 225)
+    spawnCoins(324, 225)
 
     blocks = {}
     spawnBlocks(240, 240)
+    spawnBlocks(320, 240)
 
     fall = {}
     fall.collider = world:newBSGRectangleCollider( 0, 320, 3680, 2, 0)
@@ -159,26 +138,28 @@ function love.update(dt)
                 
             end
         end
-        if not kapoo.isDead and not kapoo.shellHit then
-            kapoo.collider:setLinearVelocity(kapoo.dx, kapoo.dy)
+        for i, k in ipairs(kapoos) do
+            if not k.isDead and not k.shellHit then
+                k.collider:setLinearVelocity(k.dx, k.dy)
 
-            kapoo.x = kapoo.collider:getX() - 8
-            kapoo.y = kapoo.collider:getY() - 12
+                k.x = k.collider:getX() - 8
+                k.y = k.collider:getY() - 12
 
-            kapoo.collider1:setX(kapoo.collider:getX())
-            kapoo.collider1:setY(kapoo.collider:getY() - 13)
+                k.collider1:setX(k.collider:getX())
+                k.collider1:setY(k.collider:getY() - 13)
 
-            kapoo.anim:update(dt)
-        elseif kapoo.shellHit then
-            kapoo.collider:setLinearVelocity(kapoo.dx, kapoo.dy)
+                k.anim:update(dt)
+            elseif k.shellHit then
+                k.collider:setLinearVelocity(k.dx, k.dy)
 
-            kapoo.x = kapoo.collider:getX() - 8
-            kapoo.y = kapoo.collider:getY() - 8
+                k.x = k.collider:getX() - 8
+                k.y = k.collider:getY() - 8
 
-            kapoo.collider1:setX(kapoo.collider:getX())
-            kapoo.collider1:setY(kapoo.collider:getY() - 10)
-            kapoo.anim:gotoFrame(2)
-            kapoo.anim:update(dt)
+                k.collider1:setX(k.collider:getX())
+                k.collider1:setY(k.collider:getY() - 10)
+                k.anim:gotoFrame(2)
+                k.anim:update(dt)
+            end
         end
        
         handleCollisions()
@@ -344,7 +325,7 @@ function love.update(dt)
             local collision_data = player.colliderSmall:getEnterCollisionData('Blocks')
             local block = collision_data.collider:getObject()
             for i, c in ipairs(coins)  do
-                if c.x <= player.x + 10 and c.x >= player.x - 10 then
+                if c.x <= player.x + 18 and c.x >= player.x - 18 then
                 c.y = c.y - (2500 * dt)
                 sounds.coin:play()
                 
@@ -384,14 +365,16 @@ function love.draw()
     for i, b in ipairs(blocks) do
         love.graphics.draw(b.spriteSheet, b.x, b.y)
     end
+    
     for i, g in ipairs(gambus) do
         if not g.deathAnimDone then
             g.anim:draw(g.spriteSheet, g.x, g.y, nil, 1, 1)
         end 
     end
-   
-        kapoo.anim:draw(kapoo.spriteSheet, kapoo.x, kapoo.y, nil, 1, 1)
-   
+
+    for i, k in ipairs(kapoos) do
+        k.anim:draw(k.spriteSheet, k.x, k.y, nil, 1, 1)
+    end
     if player.isMovingLeft then 
         player.anim:draw(player.spriteSheet, player.x + 15, player.y, nil, -1, 1)
     else
@@ -453,57 +436,57 @@ function handleCollisions()
         sounds.Squish:play()
     end
     
+    for i, k in ipairs(kapoos) do
+        if player.colliderSmall:enter('ShellKapoo') and not k.shellHit and k.x <= player.x + 10 and k.x >= player.x - 10 then
+            local collision_data = player.colliderSmall:getEnterCollisionData('ShellKapoo')
+            local enemy = collision_data.collider:getObject()
+            player.colliderSmall:applyLinearImpulse(0, -100)
+            k.shellHit = true
+            sounds.kick:play()
+            k.dx = 0
+            k.anim = k.animations.shell
+            
+            local tempx = k.collider:getX()
+            local tempy = k.collider:getY()
+            k.collider:destroy()
+            k.collider = world:newBSGRectangleCollider(tempx, tempy, 16, 16, 0)
+            k.collider:setFixedRotation(true)
+            k.collider:setCollisionClass('Enemy')
+            k.collider:setObject(k)
+            k.x = k.collider:getX() - 8
+            k.y = k.collider:getY() - 8
 
-    if player.colliderSmall:enter('ShellKapoo') and not kapoo.shellHit then
-        local collision_data = player.colliderSmall:getEnterCollisionData('ShellKapoo')
-        local enemy = collision_data.collider:getObject()
-        player.colliderSmall:applyLinearImpulse(0, -275)
-        kapoo.shellHit = true
-        sounds.kick:play()
-        kapoo.dx = 0
-        kapoo.anim = kapoo.animations.shell
-        
-        local tempx = kapoo.collider:getX()
-        local tempy = kapoo.collider:getY()
-        kapoo.collider:destroy()
-        kapoo.collider = world:newBSGRectangleCollider(tempx, tempy, 16, 16, 0)
-        kapoo.collider:setFixedRotation(true)
-        kapoo.collider:setCollisionClass('Enemy')
-        kapoo.collider:setObject(kapoo)
-        kapoo.x = kapoo.collider:getX() - 8
-        kapoo.y = kapoo.collider:getY() - 8
+            k.collider1:setX(k.collider:getX())
+            k.collider1:setY(k.collider:getY() - 5)
 
-        kapoo.collider1:setX(kapoo.collider:getX())
-        kapoo.collider1:setY(kapoo.collider:getY() - 5)
-
-    elseif player.colliderSmall:enter('ShellKapoo') and kapoo.shellHit then
-        local collision_data = player.colliderSmall:getEnterCollisionData('ShellKapoo')
-        local enemy = collision_data.collider:getObject()
-        player.colliderSmall:applyLinearImpulse(0, -275)
-        sounds.kick:play()
-        kapoo.dx = 150
-    end
-
-    
-    if kapoo.collider:enter('Enemy') and kapoo.shellHit then
-        local collision_data = kapoo.collider:getEnterCollisionData('Enemy')
-        local enemy = collision_data.collider:getObject()
-        kapoo.dx = kapoo.dx*-1
-        for i, g in ipairs(gambus) do 
-            if g.x <= kapoo.x + 18 and g.x >= kapoo.x - 18 then
-            g.isDead = true
-            end
+        elseif player.colliderSmall:enter('ShellKapoo') and k.shellHit then
+            local collision_data = player.colliderSmall:getEnterCollisionData('ShellKapoo')
+            local enemy = collision_data.collider:getObject()
+            player.colliderSmall:applyLinearImpulse(0, -100)
+            sounds.kick:play()
+            k.dx = 150
         end
-        sounds.Squish:play()
     end
 
-    if kapoo.collider:enter('Enemy') and not kapoo.shellHit then
-        local collision_data = kapoo.collider:getEnterCollisionData('Enemy')
-        local enemy = collision_data.collider:getObject()
-        kapoo.dx = kapoo.dx*-1
-        for i, g in ipairs(gambus) do 
-            if g.x <= kapoo.x + 18 and g.x >= kapoo.x - 18 then
-            g.dx = g.dx*-1
+    for i, k in ipairs(kapoos) do
+       if k.collider:enter('Enemy') and k.shellHit then
+            local collision_data = k.collider:getEnterCollisionData('Enemy')
+            local enemy = collision_data.collider:getObject()
+            k.dx = k.dx*-1
+            for i, g in ipairs(gambus) do
+                g.isDead = true
+            end
+            sounds.Squish:play()
+        end
+    end
+
+    for i, k in ipairs(kapoos) do
+        if k.collider:enter('Enemy') and not k.shellHit then
+            local collision_data = k.collider:getEnterCollisionData('Enemy')
+            local enemy = collision_data.collider:getObject()
+            k.dx = k.dx*-1
+            for i, g in ipairs(gambus) do
+                g.dx = g.dx*-1
             end
         end
     end
@@ -515,11 +498,17 @@ function handleCollisions()
             g.dx = g.dx * -1
         end
     end
-
-    if kapoo.collider:enter('Platforms') then
-        local collision_data = kapoo.collider:getEnterCollisionData('Platforms')
-        local wall = collision_data.collider:getObject()
-        kapoo.dx = kapoo.dx * -1
+    
+    for i, k in ipairs(kapoos) do
+        if k.collider:enter('Platforms') then
+            local collision_data = k.collider:getEnterCollisionData('Platforms')
+            local wall = collision_data.collider:getObject()
+            k.dx = k.dx * -1
+        elseif k.collider:enter('Platforms') and k.shellHit then
+            local collision_data = k.collider:getEnterCollisionData('Platforms')
+            local wall = collision_data.collider:getObject()
+            k.dx = k.dx * -1
+        end
     end
 end
 
@@ -575,4 +564,33 @@ function spawnGambu( x, y)
     gambu.isDead = false
     gambu.deathAnimDone = false
     table.insert(gambus, gambu)
+end
+
+function spawnKapoos(x, y)
+    local kapoo = {}
+    kapoo.dx = 20
+    kapoo.dy = 0
+    kapoo.spriteSheet = love.graphics.newImage('Sprites/kapoo.png')
+    kapoo.walkGrid = anim8.newGrid( 16, 24, kapoo.spriteSheet:getWidth(), kapoo.spriteSheet:getHeight())
+    kapoo.shellGrid = anim8.newGrid( 16, 16, kapoo.spriteSheet:getWidth(), kapoo.spriteSheet:getHeight(), 0, 8)
+
+    kapoo.animations = {}
+    kapoo.animations.moving = anim8.newAnimation( kapoo.walkGrid( '1-2', 1), 0.1)
+    kapoo.animations.shell = anim8.newAnimation( kapoo.shellGrid( '4-3', 1), 0.1)
+    kapoo.anim = kapoo.animations.moving
+
+    kapoo.collider = world:newBSGRectangleCollider(x, y, 16, 24, 0)
+    kapoo.collider:setFixedRotation(true)
+    kapoo.collider:setCollisionClass('Enemy')
+    kapoo.collider:setObject(kapoo)
+
+    kapoo.collider1 = world:newBSGRectangleCollider(x, y, 16, 1, 0)
+    kapoo.collider1:setType('static')
+    kapoo.collider1:setFixedRotation(true)
+    kapoo.collider1:setCollisionClass('ShellKapoo')
+    kapoo.collider1:setObject(kapoo)
+
+    kapoo.isDead = false
+    kapoo.shellHit = false
+    table.insert(kapoos, kapoo)
 end
