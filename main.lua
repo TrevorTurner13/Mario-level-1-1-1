@@ -33,7 +33,7 @@ function love.load()
     world:addCollisionClass('fall')
     world:addCollisionClass('Platforms')
     world:addCollisionClass('win')
-    world:addCollisionClass('Walls')
+    world:addCollisionClass('Blocks')
 
     walls = {}
     
@@ -77,30 +77,9 @@ function love.load()
     --player.colliderBig:setCollisionClass('Player')
     --player.colliderBig:setObject(player)
     
-    gambu = {}
-    gambu.dx = 20
-    gambu.dy = 0
-    gambu.spriteSheet = love.graphics.newImage('Sprites/gambu.png')
-    gambu.grid = anim8.newGrid( 16, 16, gambu.spriteSheet:getWidth(), gambu.spriteSheet:getHeight())
-    
-    gambu.animations = {}
-    gambu.animations.moving = anim8.newAnimation( gambu.grid( '1-2', 1), 0.1)
-    gambu.animations.dead = anim8.newAnimation( gambu.grid( "3-1", 1), 0.06)
-    gambu.anim = gambu.animations.moving
-
-    gambu.collider = world:newBSGRectangleCollider(300, 270, 16, 16, 0)
-    gambu.collider:setFixedRotation(true)
-    gambu.collider:setCollisionClass('Enemy')
-    gambu.collider:setObject(gambu)
-
-    gambu.collider1 = world:newBSGRectangleCollider(100, 240, 16, 1, 0)
-    gambu.collider1:setType('static')
-    gambu.collider1:setFixedRotation(true)
-    gambu.collider1:setCollisionClass('KillGambu')
-    gambu.collider1:setObject(gambu)
-
-    gambu.isDead = false
-    gambu.deathAnimDone = false
+    gambus = {}
+    spawnGambu(300, 270)
+    spawnGambu(350, 270)
 
     kapoo = {}
     kapoo.dx = 20
@@ -128,6 +107,13 @@ function love.load()
     kapoo.isDead = false
     kapoo.shellHit = false
 
+    coins = {}
+    spawnCoins(244, 225)
+    spawnCoins(300, 225)
+
+    blocks = {}
+    spawnBlocks(240, 240)
+
     fall = {}
     fall.collider = world:newBSGRectangleCollider( 0, 320, 3680, 2, 0)
     fall.collider:setFixedRotation(true)
@@ -153,19 +139,20 @@ function love.update(dt)
     if not player.isDead and not player.isDeadAnimDone and not player.win then
         sounds.music:play()
         player.isMoving = false
-        if not gambu.isDead then
-            gambu.collider:setLinearVelocity(gambu.dx,gambu.dy)
+        for i, g in ipairs(gambus) do
+            if not g.isDead then
+                g.collider:setLinearVelocity(g.dx,g.dy)
 
-            gambu.x = gambu.collider:getX() - 8
-            gambu.y = gambu.collider:getY() - 8
+                g.x = g.collider:getX() - 8
+                g.y = g.collider:getY() - 8
 
-            gambu.collider1:setX(gambu.collider:getX())
-            gambu.collider1:setY(gambu.collider:getY() - 10)
+                g.collider1:setX(g.collider:getX())
+                g.collider1:setY(g.collider:getY() - 10)
 
-            gambu.anim:update(dt)
-            
+                g.anim:update(dt)
+                
+            end
         end
-
         if not kapoo.isDead and not kapoo.shellHit then
             kapoo.collider:setLinearVelocity(kapoo.dx, kapoo.dy)
 
@@ -224,6 +211,8 @@ function love.update(dt)
                 player.isMoving = true
                 player.isMovingLeft = true
             end
+
+        
         else
             player.colliderSmall:setLinearVelocity(player.dx,player.dy)
             player.isMoving = false
@@ -272,8 +261,10 @@ function love.update(dt)
 
         if player.isDead and not player.deathAnimDone then
             sounds.music:pause()
-            if not gambu.isDead then
-                gambu.collider1:setType('dynamic')
+            for i, g in ipairs(gambus) do
+                if not g.isDead then
+                    g.collider1:setType('dynamic')
+                end
             end
             sounds.die:play()
             player.anim = player.animations.death
@@ -287,19 +278,20 @@ function love.update(dt)
            timer = timer + dt * timerSpeed
         end
 
-
-        if gambu.isDead and not gambu.deathAnimDone then
-            gambu.anim = gambu.animations.dead
-            gambu.anim:gotoFrame(1)
-            if timer > 1 then
-                gambu.deathAnimDone = true
-                gambu.collider:destroy()
-                gambu.collider1:destroy()
-                timer = timer - 1
-           end
-      
-           timer = timer + dt * timerSpeed
-            
+        for i, g in ipairs(gambus) do
+            if g.isDead and not g.deathAnimDone then
+                g.anim = g.animations.dead
+                g.anim:gotoFrame(1)
+                if timer > 1 then
+                    g.deathAnimDone = true
+                    g.collider:destroy()
+                    g.collider1:destroy()
+                    timer = timer - 1
+            end
+        
+            timer = timer + dt * timerSpeed
+                
+            end
         end
 
         if isMovingLeft then
@@ -308,6 +300,11 @@ function love.update(dt)
             player.x = player.colliderSmall:getX() - 8
         end
         player.y = player.colliderSmall:getY() - 8
+
+        for i, b in ipairs(blocks) do
+            b.x = b.collider:getX() - 8
+            b.y = b.collider:getY() - 17
+        end
 
         cam:lookAt(player.x, player.y)
 
@@ -335,6 +332,20 @@ function love.update(dt)
 
         player.anim:update(dt)
         
+        if player.colliderSmall:enter('Blocks') then
+            local collision_data = player.colliderSmall:getEnterCollisionData('Blocks')
+            local block = collision_data.collider:getObject()
+            for i, c in ipairs(coins)  do
+                if c.x <= player.x + 10 and c.x >= player.x - 10 then
+                c.y = c.y - (2500 * dt)
+                sounds.coin:play()
+                
+                end
+            end
+        end 
+        for i, c in ipairs(coins) do
+            c.anim:update(dt)
+        end
     end
 
     if isMovingLeft then
@@ -356,10 +367,19 @@ function love.draw()
     cam:attach()
         gameMap:drawLayer(gameMap.layers["Tile Layer 1"])
         gameMap:drawLayer(gameMap.layers["Tile Layer 2"])
-    
 
-    if not gambu.deathAnimDone then
-        gambu.anim:draw(gambu.spriteSheet, gambu.x, gambu.y, nil, 1, 1)
+   for i, c in ipairs(coins) do 
+        c.anim:draw(c.spriteSheet, c.x, c.y, nil, 1, 1)
+    end
+    
+    --coin2.anim:draw(coin1.spriteSheet, coin2.x, coin2.y, nil, 1, 1)
+    for i, b in ipairs(blocks) do
+        love.graphics.draw(b.spriteSheet, b.x, b.y)
+    end
+    for i, g in ipairs(gambus) do
+        if not g.deathAnimDone then
+            g.anim:draw(g.spriteSheet, g.x, g.y, nil, 1, 1)
+        end 
     end
    
         kapoo.anim:draw(kapoo.spriteSheet, kapoo.x, kapoo.y, nil, 1, 1)
@@ -370,7 +390,7 @@ function love.draw()
         player.anim:draw(player.spriteSheet, player.x, player.y, nil, 1, 1)
     end
     
-    --world:draw()
+    world:draw()
     cam:detach()
 
     if player.isDead then
@@ -404,7 +424,6 @@ function handleCollisions()
         local wall = collision_data.collider:getObject()
         player.is_on_ground = true
     end
-
     
     if player.colliderSmall:enter('Enemy') then
         local collision_data = player.colliderSmall:getEnterCollisionData('Enemy')
@@ -413,13 +432,17 @@ function handleCollisions()
         sounds.die:play()
     end
 
+    
     if player.colliderSmall:enter('KillGambu') then
         local collision_data = player.colliderSmall:getEnterCollisionData('KillGambu')
         local enemy = collision_data.collider:getObject()
         player.colliderSmall:applyLinearImpulse(0, -275)
-        gambu.isDead = true
+        for i, g in ipairs(gambus) do
+            g.isDead = true
+        end
         sounds.Squish:play()
     end
+    
 
     if player.colliderSmall:enter('ShellKapoo') and not kapoo.shellHit then
         local collision_data = player.colliderSmall:getEnterCollisionData('ShellKapoo')
@@ -438,7 +461,7 @@ function handleCollisions()
         kapoo.collider:setCollisionClass('Enemy')
         kapoo.collider:setObject(kapoo)
         kapoo.x = kapoo.collider:getX() - 8
-        kapoo.y = kapoo.collider:getY() - 500
+        kapoo.y = kapoo.collider:getY() - 8
 
         kapoo.collider1:setX(kapoo.collider:getX())
         kapoo.collider1:setY(kapoo.collider:getY() - 5)
@@ -451,11 +474,14 @@ function handleCollisions()
         kapoo.dx = 150
     end
 
+    
     if kapoo.collider:enter('Enemy') and kapoo.shellHit then
         local collision_data = kapoo.collider:getEnterCollisionData('Enemy')
         local enemy = collision_data.collider:getObject()
         kapoo.dx = kapoo.dx*-1
-        gambu.isDead = true
+        for i, g in ipairs(gambus) do
+            g.isDead = true
+        end
         sounds.Squish:play()
     end
 
@@ -463,17 +489,76 @@ function handleCollisions()
         local collision_data = kapoo.collider:getEnterCollisionData('Enemy')
         local enemy = collision_data.collider:getObject()
         kapoo.dx = kapoo.dx*-1
-        gambu.dx = gambu.dx*-1
+        for i, g in ipairs(gambus) do
+            g.dx = g.dx*-1
+        end
     end
 
-    if gambu.collider:enter('Platforms') then
-        local collision_data = gambu.collider:getEnterCollisionData('Platforms')
-        local wall = collision_data.collider:getObject()
-        gambu.dx = gambu.dx * -1
+    for i, g in ipairs(gambus) do
+        if g.collider:enter('Platforms') then
+            local collision_data = g.collider:getEnterCollisionData('Platforms')
+            local wall = collision_data.collider:getObject()
+            g.dx = g.dx * -1
+        end
     end
+
     if kapoo.collider:enter('Platforms') then
         local collision_data = kapoo.collider:getEnterCollisionData('Platforms')
         local wall = collision_data.collider:getObject()
         kapoo.dx = kapoo.dx * -1
     end
+end
+
+function spawnCoins(x, y)
+    local coin = {}
+    coin.x = x
+    coin.y = y
+    coin.spriteSheet = love.graphics.newImage('Sprites/coins.png')
+    coin.spinGrid = anim8.newGrid( 8, 16, coin.spriteSheet:getWidth(), coin.spriteSheet:getHeight())
+
+    coin.animations = {}
+    coin.animations.spin = anim8.newAnimation( coin.spinGrid( '1-4', 1), 0.06)
+    coin.anim = coin.animations.spin
+    table.insert(coins,coin)
+end
+
+function spawnBlocks(x, y)
+    local block = {}
+    block.dx = 245
+    block.dy = 240
+    block.spriteSheet = love.graphics.newImage('Sprites/question mark.png')
+    block.collider = world:newBSGRectangleCollider(x, y, 16, 2, 0)
+    block.collider:setFixedRotation(true)
+    block.collider:setType('static')
+    block.collider:setCollisionClass('Blocks')
+    block.collider:setObject(block)
+    table.insert(blocks, block)
+end
+
+function spawnGambu( x, y)
+    local gambu = {}
+    gambu.dx = 20
+    gambu.dy = 0
+    gambu.spriteSheet = love.graphics.newImage('Sprites/gambu.png')
+    gambu.grid = anim8.newGrid( 16, 16, gambu.spriteSheet:getWidth(), gambu.spriteSheet:getHeight())
+    
+    gambu.animations = {}
+    gambu.animations.moving = anim8.newAnimation( gambu.grid( '1-2', 1), 0.1)
+    gambu.animations.dead = anim8.newAnimation( gambu.grid( "3-1", 1), 0.06)
+    gambu.anim = gambu.animations.moving
+
+    gambu.collider = world:newBSGRectangleCollider(x, y, 16, 16, 0)
+    gambu.collider:setFixedRotation(true)
+    gambu.collider:setCollisionClass('Enemy')
+    gambu.collider:setObject(gambu)
+
+    gambu.collider1 = world:newBSGRectangleCollider(x, y, 16, 1, 0)
+    gambu.collider1:setType('static')
+    gambu.collider1:setFixedRotation(true)
+    gambu.collider1:setCollisionClass('KillGambu')
+    gambu.collider1:setObject(gambu)
+
+    gambu.isDead = false
+    gambu.deathAnimDone = false
+    table.insert(gambus, gambu)
 end
