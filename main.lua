@@ -412,7 +412,7 @@ function love.draw()
     else
         player.anim:draw(player.spriteSheet, player.x, player.y, nil, 1, 1)
     end
-    ll
+    
     --world:draw()
     cam:detach()
 
