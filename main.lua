@@ -291,7 +291,7 @@ function love.update(dt)
             if g.isDead and not g.deathAnimDone then
                 g.anim = g.animations.dead
                 g.anim:gotoFrame(1)
-                if g.timer >= 1 then
+                if g.timer >= 0.25 then
                     g.deathAnimDone = true
                     g.collider:destroy()
                     g.collider1:destroy()
@@ -412,8 +412,8 @@ function love.draw()
     else
         player.anim:draw(player.spriteSheet, player.x, player.y, nil, 1, 1)
     end
-    
-    world:draw()
+    ll
+    --world:draw()
     cam:detach()
 
     if player.isDead then
@@ -526,7 +526,7 @@ function handleCollisions()
             end
         end                        
     end
-end
+
     for i, g in ipairs(gambus) do
         if g.collider:enter('Platforms') then
             local collision_data = g.collider:getEnterCollisionData('Platforms')
