@@ -30,6 +30,7 @@ function love.load()
     sounds.item = love.audio.newSource("sounds/item.wav", "stream")
     sounds.item:setLooping(false) 
     sounds.Powerup = love.audio.newSource("sounds/Powerup.wav", "stream")
+    sounds.Powerup:setLooping(false)
 
     world:addCollisionClass('Player')
     world:addCollisionClass('Enemy')
@@ -68,6 +69,7 @@ function love.load()
     player.animations.jumpBig = anim8.newAnimation( player.bigMarioGrid( '6-1 ', 1), 0.06)
     player.animations.deathBig = anim8.newAnimation( player.bigMarioGrid( '7-6', 1), 0.06)
     player.anim = player.animations.right
+    player.anim = player.animations.rightBig
 
     player.isMoving = false
     player.isMovingLeft = false
@@ -81,10 +83,8 @@ function love.load()
     player.colliderSmall:setCollisionClass('Player')
     player.colliderSmall:setObject(player)
     player.timer = 0
-    --player.colliderBig = world:newBSGRectangleCollider( 0, 0, 16, 16, 0)
-   -- player.colliderBig:setFixedRotation(true)
-    --player.colliderBig:setCollisionClass('Player')
-    --player.colliderBig:setObject(player)
+
+    
     
     gambus = {}
     spawnGambu(300, 270)
@@ -133,6 +133,7 @@ function love.load()
    
     mushroomBlocks = {}
     spawnMushroomBlocks(336,176)
+    mushroomGrabbed = false
 
     fall = {}
     fall.collider = world:newBSGRectangleCollider( 0, 320, 3680, 2, 0)
@@ -196,82 +197,171 @@ function love.update(dt)
             end
         end
        
-        handleCollisions()
+        handleCollisions(dt)
         --world.update(dt)
 
-        player.dx , player.dy = player.colliderSmall:getLinearVelocity()
-
-        if love.keyboard.isDown("d") and not love.keyboard.isDown('lshift') then  
-            player.colliderSmall:setLinearVelocity(200,player.dy)
-            player.anim = player.animations.right
-            if not player.isJumping then
-                player.isMoving = true
-                player.isMovingLeft = false
-            end
         
-        elseif love.keyboard.isDown("d") and love.keyboard.isDown('lshift') then
-            player.colliderSmall:setLinearVelocity(200,player.dy)
-            player.anim = player.animations.right
-            if not player.isJumping then
-                player.isMoving = true
-                player.isMovingLeft = false
+        if not player.isBig then
+            player.dx , player.dy = player.colliderSmall:getLinearVelocity()
+            if love.keyboard.isDown("d") and not love.keyboard.isDown('lshift') then  
+                player.colliderSmall:setLinearVelocity(150,player.dy)
+                player.anim = player.animations.right
+                if not player.isJumping then
+                    player.isMoving = true
+                    player.isMovingLeft = false
+                end
+            
+            elseif love.keyboard.isDown("d") and love.keyboard.isDown('lshift') then
+                player.colliderSmall:setLinearVelocity(200,player.dy)
+                player.anim = player.animations.right
+                if not player.isJumping then
+                    player.isMoving = true
+                    player.isMovingLeft = false
+                end
+            
+            elseif love.keyboard.isDown("a") and not love.keyboard.isDown('lshift') then
+                player.colliderSmall:setLinearVelocity(-150,player.dy)
+                player.anim = player.animations.right
+                if not player.isJumping then
+                    player.isMoving = true
+                    player.isMovingLeft = true
+                end
+            
+            elseif love.keyboard.isDown("a") and love.keyboard.isDown('lshift') then
+                player.colliderSmall:setLinearVelocity(-200,player.dy)
+                player.anim = player.animations.right
+                if not player.isJumping then
+                    player.isMoving = true
+                    player.isMovingLeft = true
+                end
+    
+            
+            else
+                player.colliderSmall:setLinearVelocity(player.dx,player.dy)
+                player.isMoving = false
             end
-        
-        elseif love.keyboard.isDown("a") and not love.keyboard.isDown('lshift') then
-            player.colliderSmall:setLinearVelocity(-200,player.dy)
-            player.anim = player.animations.right
-            if not player.isJumping then
-                player.isMoving = true
-                player.isMovingLeft = true
+    
+            function love.keypressed(key)
+                if key == 'space' and player.is_on_ground then
+                    player.colliderSmall:applyLinearImpulse(0, -275)
+                    player.is_on_ground = false
+                    sounds.jump:play()
+                end
             end
-        
-        elseif love.keyboard.isDown("a") and love.keyboard.isDown('lshift') then
-            player.colliderSmall:setLinearVelocity(-200,player.dy)
-            player.anim = player.animations.right
-            if not player.isJumping then
-                player.isMoving = true
-                player.isMovingLeft = true
+            
+            function love.keyreleased(key)
+                -- because love2d uses a physics engine
+                -- all force puts inertia onto a body.
+                -- We need to stop the body inertia 
+                -- once we are not longer pressing a key
+                if key == 'd' or key == 'a' then
+                    -- again, we need to keep the y component
+                    player.dx , player.dy = player.colliderSmall:getLinearVelocity()
+                    player.colliderSmall:setLinearVelocity(0,player.dy)
+                end
             end
-
-        
+            if not player.is_on_ground then
+                player.anim = player.animations.jump
+                player.anim:gotoFrame(1)
+            elseif not player.isMoving and player.is_on_ground then
+                player.anim = player.animations.right
+                player.anim:gotoFrame(4)
+            end
         else
-            player.colliderSmall:setLinearVelocity(player.dx,player.dy)
-            player.isMoving = false
+            player.dx , player.dy = player.colliderBig:getLinearVelocity()
+
+            
+
+
+
+
+            if love.keyboard.isDown("d") and not love.keyboard.isDown('lshift') then  
+                player.colliderBig:setLinearVelocity(150,player.dy)
+                player.anim = player.animations.rightBig
+                if not player.isJumping then
+                    player.isMoving = true
+                    player.isMovingLeft = false
+                end
+            
+            elseif love.keyboard.isDown("d") and love.keyboard.isDown('lshift') then
+                player.colliderBig:setLinearVelocity(200,player.dy)
+                player.anim = player.animations.rightBig
+                if not player.isJumping then
+                    player.isMoving = true
+                    player.isMovingLeft = false
+                end
+            
+            elseif love.keyboard.isDown("a") and not love.keyboard.isDown('lshift') then
+                player.colliderBig:setLinearVelocity(-150,player.dy)
+                player.anim = player.animations.rightBig
+                if not player.isJumping then
+                    player.isMoving = true
+                    player.isMovingLeft = true
+                end
+            
+            elseif love.keyboard.isDown("a") and love.keyboard.isDown('lshift') then
+                player.colliderBig:setLinearVelocity(-200,player.dy)
+                player.anim = player.animations.rightBig
+                if not player.isJumping then
+                    player.isMoving = true
+                    player.isMovingLeft = true
+                end
+    
+            
+            else
+                player.colliderBig:setLinearVelocity(player.dx,player.dy)
+                player.isMoving = false
+            end
+    
+            function love.keypressed(key)
+                if key == 'space' and player.is_on_ground then
+                    player.colliderBig:applyLinearImpulse(0, -550)
+                    player.is_on_ground = false
+                    sounds.jump:play()
+                end
+            end
+            
+            function love.keyreleased(key)
+                -- because love2d uses a physics engine
+                -- all force puts inertia onto a body.
+                -- We need to stop the body inertia 
+                -- once we are not longer pressing a key
+                if key == 'd' or key == 'a' then
+                    -- again, we need to keep the y component
+                    player.dx , player.dy = player.colliderBig:getLinearVelocity()
+                    player.colliderBig:setLinearVelocity(0,player.dy)
+                end
+            end
+            if not player.is_on_ground then
+                player.anim = player.animations.jumpBig
+                player.anim:gotoFrame(1)
+            elseif not player.isMoving and player.is_on_ground then
+                player.anim = player.animations.rightBig
+                player.anim:gotoFrame(4)
+            end
+            --player.animations.rightBig = anim8.newAnimation( player.bigMarioGrid( '4-1', 1), 0.06)
+           --player.animations.jumpBig = anim8.newAnimation( player.bigMarioGrid( '6-1 ', 1), 0.06)
+            --player.animations.deathBig = anim8.newAnimation( player.bigMarioGrid( '7-6', 1), 0.06)
         end
 
-        function love.keypressed(key)
-            if key == 'space' and player.is_on_ground then
-                player.colliderSmall:applyLinearImpulse(0, -275)
-                player.is_on_ground = false
-                sounds.jump:play()
-            end
-        end
+
         
-        function love.keyreleased(key)
-            -- because love2d uses a physics engine
-            -- all force puts inertia onto a body.
-            -- We need to stop the body inertia 
-            -- once we are not longer pressing a key
-            if key == 'd' or key == 'a' then
-                -- again, we need to keep the y component
-                player.dx , player.dy = player.colliderSmall:getLinearVelocity()
-                player.colliderSmall:setLinearVelocity(0,player.dy)
-            end
-        end
         
-        if not player.is_on_ground then
-            player.anim = player.animations.jump
-            player.anim:gotoFrame(1)
-        elseif not player.isMoving and player.is_on_ground then
-            player.anim = player.animations.right
-            player.anim:gotoFrame(4)
-        end
+        
 
         if player.colliderSmall:enter('fall') then
             local collision_data = player.colliderSmall:getEnterCollisionData('fall')
             local fall = collision_data.collider:getObject()
             player.isDead = true
         end
+        if player.isBig then
+            if player.colliderBig:enter('fall') then
+                local collision_data = player.colliderBig:getEnterCollisionData('fall')
+                local fall = collision_data.collider:getObject()
+                player.isDead = true
+            end
+        end
+        
 
         if player.colliderSmall:enter('win') then
             local collision_data = player.colliderSmall:getEnterCollisionData('win')
@@ -282,6 +372,17 @@ function love.update(dt)
 
         end
 
+        if player.isBig then
+            if player.colliderBig:enter('win') then
+                local collision_data = player.colliderBig:getEnterCollisionData('win')
+                local win = collision_data.collider:getObject()
+                 player.win = true 
+                 sounds.win:play()
+                 sounds.music:stop()
+    
+            end
+        end
+
         if player.isDead and not player.deathAnimDone then
             sounds.music:pause()
             for i, g in ipairs(gambus) do
@@ -289,9 +390,16 @@ function love.update(dt)
                     g.collider1:setType('dynamic')
                 end
             end
-            sounds.die:play()
-            player.anim = player.animations.death
-            player.colliderSmall:applyLinearImpulse(0, -275)
+            if player.isBig then
+                sounds.die:play()
+                player.anim = player.animations.deathBig
+                player.colliderBig:applyLinearImpulse(0, -550)
+            else 
+                sounds.die:play()
+                player.anim = player.animations.death
+                player.colliderSmall:applyLinearImpulse(0, -275)
+            end
+
             if player.timer > 1 then
                 player.deathAnimDone = true
                 
@@ -317,12 +425,24 @@ function love.update(dt)
             end
         end
 
-        if isMovingLeft then
-            player.x = player.colliderSmall:getX() - 8
+        if not player.isBig then
+            if isMovingLeft then
+                player.x = player.colliderSmall:getX() - 8
+            else
+                player.x = player.colliderSmall:getX() - 8
+            end
+            player.y = player.colliderSmall:getY() - 8
+
         else
-            player.x = player.colliderSmall:getX() - 8
+            if isMovingLeft then
+                player.x = player.colliderBig:getX() - 8
+            else
+                player.x = player.colliderBig:getX() - 8
+            end
+            player.y = player.colliderBig:getY() - 8
+
         end
-        player.y = player.colliderSmall:getY() - 8
+        
 
         for i, b in ipairs(blocks) do
             b.x = b.collider:getX() - 8
@@ -336,13 +456,16 @@ function love.update(dt)
             end
         end
 
-        for i, m in ipairs(mushrooms)  do
-            m.x = m.collider:getX() - 8
-            m.y = m.collider:getY() - 8
-            m.collider:setLinearVelocity(100,m.dy)
-            m.collider:applyLinearImpulse(m.dx, 90)
-            
+        if mushroomGrabbed == false then
+            for i, m in ipairs(mushrooms)  do
+                m.x = m.collider:getX() - 8
+                m.y = m.collider:getY() - 8
+                m.collider:setLinearVelocity(100,m.dy)
+                m.collider:applyLinearImpulse(m.dx, 90)
+                
+            end
         end
+        
         cam:lookAt(player.x, player.y)
 
         local w = love.graphics.getWidth()
@@ -408,6 +531,49 @@ function love.update(dt)
             end
         end 
 
+        if player.isBig then
+            if player.colliderBig:enter('Blocks') then
+                local collision_data = player.colliderBig:getEnterCollisionData('Blocks')
+                local block = collision_data.collider:getObject()
+                for i, c in ipairs(coins)  do
+                    if c.x <= player.x + 18 and c.x >= player.x - 18 then
+                        c.y = c.y + 200
+                        sounds.coin:play()
+                        c.hit = true
+                    end
+                end
+                for i, b in ipairs(blocks) do
+                    if b.x <= player.x + 18 and b.x >= player.x - 18 then
+                        b.hit = true
+                    end
+                end
+            end 
+            if player.colliderBig:enter('MushroomBlocks') then
+                local collision_data = player.colliderBig:getEnterCollisionData('MushroomBlocks')
+                local block = collision_data.collider:getObject()
+                spawnMushroom(336, 150)
+                for i, m in ipairs(mushrooms)  do
+                    m.x = m.collider:getX() - 8
+                    m.y = m.collider:getY() - 16
+                    m.spawn = true
+                    if m.x <= player.x + 18 and m.x >= player.x - 18 then
+                        
+                        sounds.item:play()
+                    end
+                end
+                for i, b in ipairs(mushroomBlocks) do
+                    if b.x <= player.x + 18 and b.x >= player.x - 18 then
+                        b.hit = true
+                        if b.hit then
+                            b.collider:destroy()
+                        end
+                    end
+                end
+            end 
+        end
+
+
+
 
         for i, c in ipairs(coins) do
             c.anim:update(dt)
@@ -421,12 +587,26 @@ function love.update(dt)
         end
     end
 
-    if isMovingLeft then
-        player.x = player.colliderSmall:getX() - 8
+    
+
+    if not player.isBig then
+        if isMovingLeft then
+            player.x = player.colliderSmall:getX() - 8
+        else
+            player.x = player.colliderSmall:getX() - 8
+        end
+        player.y = player.colliderSmall:getY() - 8
     else
-        player.x = player.colliderSmall:getX() - 8
+        if isMovingLeft then
+            player.x = player.colliderBig:getX() - 8
+        else
+            player.x = player.colliderBig:getX() - 8
+        end
+        player.y = player.colliderBig:getY() - 16
     end
-    player.y = player.colliderSmall:getY() - 8
+
+
+
     
     if player.win or player.isDead then
         if love.keyboard.isDown("escape") then
@@ -515,18 +695,72 @@ function love.draw()
     end
 end
 
-function handleCollisions()
+function handleCollisions(dt)
     if player.colliderSmall:enter('Platforms') then
         local collision_data = player.colliderSmall:getEnterCollisionData('Platforms')
         local wall = collision_data.collider:getObject()
         player.is_on_ground = true
     end
+
+    if player.isBig then
+        if player.colliderBig:enter('Platforms') then
+            local collision_data = player.colliderBig:getEnterCollisionData('Platforms')
+            local wall = collision_data.collider:getObject()
+            player.is_on_ground = true
+        end
+    end
+    
     
     if player.colliderSmall:enter('Enemy') then
         local collision_data = player.colliderSmall:getEnterCollisionData('Enemy')
         local gambu = collision_data.collider:getObject()
+        
         player.isDead = true
+         
+        
         sounds.die:play()
+    end
+    if player.isBig then
+        if player.colliderBig:enter('Enemy') then
+            
+            local collision_data = player.colliderBig:getEnterCollisionData('Enemy')
+            local gambu = collision_data.collider:getObject()
+            
+            player.isBig = false
+      
+            local tempX = player.colliderBig:getX()
+            local tempY = player.colliderBig:getY()
+            player.colliderBig:destroy()
+            player.colliderSmall = world:newBSGRectangleCollider( tempX, tempY, 16, 16, 0)
+            player.colliderSmall:setFixedRotation(true)
+            player.colliderSmall:setCollisionClass('Player')
+            player.colliderSmall:setObject(player)
+            if player.isMovingLeft then
+                 player.colliderSmall:setLinearVelocity(200, 0)
+            else 
+                 player.colliderSmall:setLinearVelocity(-200, 0)
+            end
+           
+            
+            
+        end
+    end
+    
+
+    if player.colliderSmall:enter('Mushroom') then
+        local collision_data = player.colliderSmall:getEnterCollisionData('Mushroom')
+        local mushroom = collision_data.collider:getObject()
+        player.isBig = true
+        local tempX = player.colliderSmall:getX()
+        local tempY = player.colliderSmall:getY()
+        mushroom.collider:destroy()
+        table.remove(mushrooms, 1)
+        mushroomGrabbed = true
+        player.colliderSmall:destroy()
+        player.colliderBig = world:newBSGRectangleCollider( tempX, tempY, 16, 32, 0)
+        player.colliderBig:setFixedRotation(true)
+        player.colliderBig:setCollisionClass('Player')
+        player.colliderBig:setObject(player)
     end
 
     
@@ -541,65 +775,142 @@ function handleCollisions()
         end
         sounds.Squish:play()
     end
-    
-    for i, k in ipairs(kapoos) do
-        if player.colliderSmall:enter('ShellKapoo') and not k.shellHit and k.x <= player.x + 10 and k.x >= player.x - 10 then
-            local collision_data = player.colliderSmall:getEnterCollisionData('ShellKapoo')
+    if player.isBig then
+        if player.colliderBig:enter('KillGambu') then
+            local collision_data = player.colliderBig:getEnterCollisionData('KillGambu')
             local enemy = collision_data.collider:getObject()
-            player.colliderSmall:applyLinearImpulse(0, -100)
-            k.shellHit = true
-            sounds.kick:play()
-            k.dx = 0
-            k.anim = k.animations.shell
-            
-            local tempx = k.collider:getX()
-            local tempy = k.collider:getY()
-            k.collider:destroy()
-            k.collider = world:newBSGRectangleCollider(tempx, tempy, 16, 16, 0)
-            k.collider:setFixedRotation(true)
-            k.collider:setCollisionClass('Enemy')
-            k.collider:setObject(k)
-            k.x = k.collider:getX() - 8
-            k.y = k.collider:getY() - 8
-
-            k.collider1:setX(k.collider:getX())
-            k.collider1:setY(k.collider:getY() - 5)
-
-        elseif player.colliderSmall:enter('ShellKapoo') and k.shellHit then
-            local collision_data = player.colliderSmall:getEnterCollisionData('ShellKapoo')
-            local enemy = collision_data.collider:getObject()
-            player.colliderSmall:applyLinearImpulse(0, -100)
-            sounds.kick:play()
-            k.dx = 150
-        end
-    end
-
-    for i, k in ipairs(kapoos) do
-       if k.collider:enter('Enemy') and k.shellHit then
-            local collision_data = k.collider:getEnterCollisionData('Enemy')
-            local enemy = collision_data.collider:getObject()
-            
-            for i, g in ipairs(gambus) do
-                if g.x <= k.x + 18 and g.x >= k.x - 18 then
-                    g.isDead = true
+            player.colliderBig:applyLinearImpulse(0, -275)
+            for i, g in ipairs(gambus) do 
+                if g.x <= player.x + 18 and g.x >= player.x - 18 then
+                g.isDead = true
                 end
             end
             sounds.Squish:play()
         end
     end
-
-    for i, k in ipairs(kapoos) do
-        if k.collider:enter('Enemy') and not k.shellHit then
-            local collision_data = k.collider:getEnterCollisionData('Enemy')
-            local enemy = collision_data.collider:getObject()
-            k.dx = k.dx*-1
-            for i, g in ipairs(gambus) do
-                if g.x <= k.x + 18 and g.x >= k.x - 18 then
-                    g.dx = g.dx*-1
-                end
+    
+    if not player.isBig then
+        for i, k in ipairs(kapoos) do
+            if player.colliderSmall:enter('ShellKapoo') and not k.shellHit and k.x <= player.x + 10 and k.x >= player.x - 10 then
+                local collision_data = player.colliderSmall:getEnterCollisionData('ShellKapoo')
+                local enemy = collision_data.collider:getObject()
+                player.colliderSmall:applyLinearImpulse(0, -100)
+                k.shellHit = true
+                sounds.kick:play()
+                k.dx = 0
+                k.anim = k.animations.shell
+                
+                local tempx = k.collider:getX()
+                local tempy = k.collider:getY()
+                k.collider:destroy()
+                k.collider = world:newBSGRectangleCollider(tempx, tempy, 16, 16, 0)
+                k.collider:setFixedRotation(true)
+                k.collider:setCollisionClass('Enemy')
+                k.collider:setObject(k)
+                k.x = k.collider:getX() - 8
+                k.y = k.collider:getY() - 8
+    
+                k.collider1:setX(k.collider:getX())
+                k.collider1:setY(k.collider:getY() - 5)
+    
+            elseif player.colliderSmall:enter('ShellKapoo') and k.shellHit then
+                local collision_data = player.colliderSmall:getEnterCollisionData('ShellKapoo')
+                local enemy = collision_data.collider:getObject()
+                player.colliderSmall:applyLinearImpulse(0, -100)
+                sounds.kick:play()
+                k.dx = 150
             end
-        end                        
+        end
+    
+        for i, k in ipairs(kapoos) do
+           if k.collider:enter('Enemy') and k.shellHit then
+                local collision_data = k.collider:getEnterCollisionData('Enemy')
+                local enemy = collision_data.collider:getObject()
+                
+                for i, g in ipairs(gambus) do
+                    if g.x <= k.x + 18 and g.x >= k.x - 18 then
+                        g.isDead = true
+                    end
+                end
+                sounds.Squish:play()
+            end
+        end
+    
+        for i, k in ipairs(kapoos) do
+            if k.collider:enter('Enemy') and not k.shellHit then
+                local collision_data = k.collider:getEnterCollisionData('Enemy')
+                local enemy = collision_data.collider:getObject()
+                k.dx = k.dx*-1
+                for i, g in ipairs(gambus) do
+                    if g.x <= k.x + 18 and g.x >= k.x - 18 then
+                        g.dx = g.dx*-1
+                    end
+                end
+            end                        
+        end
+    else
+        for i, k in ipairs(kapoos) do
+            if player.colliderBig:enter('ShellKapoo') and not k.shellHit and k.x <= player.x + 10 and k.x >= player.x - 10 then
+                local collision_data = player.colliderBig:getEnterCollisionData('ShellKapoo')
+                local enemy = collision_data.collider:getObject()
+                player.colliderBig:applyLinearImpulse(0, -100)
+                k.shellHit = true
+                sounds.kick:play()
+                k.dx = 0
+                k.anim = k.animations.shell
+                
+                local tempx = k.collider:getX()
+                local tempy = k.collider:getY()
+                k.collider:destroy()
+                k.collider = world:newBSGRectangleCollider(tempx, tempy, 16, 16, 0)
+                k.collider:setFixedRotation(true)
+                k.collider:setCollisionClass('Enemy')
+                k.collider:setObject(k)
+                k.x = k.collider:getX() - 8
+                k.y = k.collider:getY() - 8
+    
+                k.collider1:setX(k.collider:getX())
+                k.collider1:setY(k.collider:getY() - 5)
+    
+            elseif player.colliderBig:enter('ShellKapoo') and k.shellHit then
+                local collision_data = player.colliderBig:getEnterCollisionData('ShellKapoo')
+                local enemy = collision_data.collider:getObject()
+                player.colliderBig:applyLinearImpulse(0, -100)
+                
+                sounds.kick:play()
+                k.dx = 150
+            end
+        end
+    
+        for i, k in ipairs(kapoos) do
+           if k.collider:enter('Enemy') and k.shellHit then
+                local collision_data = k.collider:getEnterCollisionData('Enemy')
+                local enemy = collision_data.collider:getObject()
+                
+                for i, g in ipairs(gambus) do
+                    if g.x <= k.x + 18 and g.x >= k.x - 18 then
+                        g.isDead = true
+                    end
+                end
+                sounds.Squish:play()
+            end
+        end
+    
+        for i, k in ipairs(kapoos) do
+            if k.collider:enter('Enemy') and not k.shellHit then
+                local collision_data = k.collider:getEnterCollisionData('Enemy')
+                local enemy = collision_data.collider:getObject()
+
+                k.dx = k.dx*-1
+                for i, g in ipairs(gambus) do
+                    if g.x <= k.x + 18 and g.x >= k.x - 18 then
+                        g.dx = g.dx*-1
+                    end
+                end
+            end                        
+        end
     end
+    
 
     for i, g in ipairs(gambus) do
         if g.collider:enter('Platforms') then
