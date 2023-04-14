@@ -374,7 +374,7 @@ function love.update(dt)
             local block = collision_data.collider:getObject()
             for i, c in ipairs(coins)  do
                 if c.x <= player.x + 18 and c.x >= player.x - 18 then
-                    c.y = c.y - (2500 * dt)
+                    c.y = c.y + 200
                     sounds.coin:play()
                     c.hit = true
                 end
@@ -456,7 +456,7 @@ function love.draw()
         if not mb.hit then
             love.graphics.draw(mb.spriteSheet, mb.x, mb.y)
         else
-            love.graphics.draw(mb.spriteSheet, mb.x, mb.y)
+            love.graphics.draw(mb.spriteSheet1, mb.x, mb.y)
         end
     end
     --coin2.anim:draw(coin1.spriteSheet, coin2.x, coin2.y, nil, 1, 1)
