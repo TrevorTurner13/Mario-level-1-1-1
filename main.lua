@@ -25,6 +25,8 @@ function love.load()
     sounds.kick:setLooping(false)
     sounds.die = love.audio.newSource("sounds/Die.wav", "stream")
     sounds.die:setLooping(false)
+    sounds.win = love.audio.newSource("sounds/win.mp3", "stream")
+    sounds.win:setLooping(false) 
 
     world:addCollisionClass('Player')
     world:addCollisionClass('Enemy')
@@ -260,6 +262,8 @@ function love.update(dt)
             local collision_data = player.colliderSmall:getEnterCollisionData('win')
             local win = collision_data.collider:getObject()
              player.win = true 
+             sounds.win:play()
+             sounds.music:stop()
 
         end
 
