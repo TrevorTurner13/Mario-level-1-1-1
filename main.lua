@@ -281,24 +281,24 @@ function love.update(dt)
             if timer > 1 then
                 player.deathAnimDone = true
                 
-                timer = timer - 1
+                timer = 0
            end
       
-           timer = timer + dt * timerSpeed
+           timer = timer + dt
         end
 
         for i, g in ipairs(gambus) do
             if g.isDead and not g.deathAnimDone then
                 g.anim = g.animations.dead
                 g.anim:gotoFrame(1)
-                if timer > 1 then
+                if g.timer >= 1 then
                     g.deathAnimDone = true
                     g.collider:destroy()
                     g.collider1:destroy()
-                    timer = timer - 1
-            end
+                    g.timer = 0
+                end
         
-            timer = timer + dt * timerSpeed
+                g.timer = g.timer + dt
                 
             end
         end
@@ -346,14 +346,22 @@ function love.update(dt)
             local block = collision_data.collider:getObject()
             for i, c in ipairs(coins)  do
                 if c.x <= player.x + 18 and c.x >= player.x - 18 then
-                c.y = c.y - (2500 * dt)
-                sounds.coin:play()
-                
+                    c.y = c.y - (2500 * dt)
+                    sounds.coin:play()
+                    c.hit = true
                 end
             end
         end 
+
         for i, c in ipairs(coins) do
             c.anim:update(dt)
+            if c.hit then
+                c.timer = c.timer + dt
+                if c.timer > 1 then
+                    table.remove(coins, i)
+                    c.timer = 0
+                end
+            end
         end
     end
 
@@ -393,7 +401,11 @@ function love.draw()
     end
 
     for i, k in ipairs(kapoos) do
+        if k.dx < 0 then
         k.anim:draw(k.spriteSheet, k.x, k.y, nil, 1, 1)
+        else
+        k.anim:draw(k.spriteSheet, k.x + 15, k.y, nil, -1, 1)
+        end
     end
     if player.isMovingLeft then 
         player.anim:draw(player.spriteSheet, player.x + 15, player.y, nil, -1, 1)
@@ -492,10 +504,10 @@ function handleCollisions()
        if k.collider:enter('Enemy') and k.shellHit then
             local collision_data = k.collider:getEnterCollisionData('Enemy')
             local enemy = collision_data.collider:getObject()
-            k.dx = k.dx*-1
+            
             for i, g in ipairs(gambus) do
                 if g.x <= k.x + 18 and g.x >= k.x - 18 then
-                g.isDead = true
+                    g.isDead = true
                 end
             end
             sounds.Squish:play()
@@ -509,7 +521,8 @@ function handleCollisions()
             k.dx = k.dx*-1
             for i, g in ipairs(gambus) do
                 if g.x <= k.x + 18 and g.x >= k.x - 18 then
-                g.dx = g.dx*-1
+                    g.dx = g.dx*-1
+                end
             end
         end                        
     end
@@ -539,12 +552,16 @@ function spawnCoins(x, y)
     local coin = {}
     coin.x = x
     coin.y = y
+    coin.timer = 0
     coin.spriteSheet = love.graphics.newImage('Sprites/coins.png')
     coin.spinGrid = anim8.newGrid( 8, 16, coin.spriteSheet:getWidth(), coin.spriteSheet:getHeight())
 
     coin.animations = {}
     coin.animations.spin = anim8.newAnimation( coin.spinGrid( '1-4', 1), 0.06)
     coin.anim = coin.animations.spin
+
+    coin.hit = false
+    
     table.insert(coins,coin)
 end
 
@@ -565,6 +582,7 @@ function spawnGambu( x, y)
     local gambu = {}
     gambu.dx = 20
     gambu.dy = 0
+    gambu.timer = 0
     gambu.spriteSheet = love.graphics.newImage('Sprites/gambu.png')
     gambu.grid = anim8.newGrid( 16, 16, gambu.spriteSheet:getWidth(), gambu.spriteSheet:getHeight())
     
@@ -593,6 +611,7 @@ function spawnKapoos(x, y)
     local kapoo = {}
     kapoo.dx = 20
     kapoo.dy = 0
+    kapoo.timer = 0
     kapoo.spriteSheet = love.graphics.newImage('Sprites/kapoo.png')
     kapoo.walkGrid = anim8.newGrid( 16, 24, kapoo.spriteSheet:getWidth(), kapoo.spriteSheet:getHeight())
     kapoo.shellGrid = anim8.newGrid( 16, 16, kapoo.spriteSheet:getWidth(), kapoo.spriteSheet:getHeight(), 0, 8)
