@@ -80,6 +80,10 @@ function love.load()
     gambus = {}
     spawnGambu(300, 270)
     spawnGambu(350, 270)
+    spawnGambu(700, 270)
+    spawnGambu(2000, 270)
+    spawnGambu(2025, 270)
+    spawnGambu(3000, 270)
 
     kapoos = {}
     spawnKapoos(100, 270)
@@ -420,8 +424,10 @@ function handleCollisions()
         local collision_data = player.colliderSmall:getEnterCollisionData('KillGambu')
         local enemy = collision_data.collider:getObject()
         player.colliderSmall:applyLinearImpulse(0, -275)
-        for i, g in ipairs(gambus) do
+        for i, g in ipairs(gambus) do 
+            if g.x <= player.x + 18 and g.x >= player.x - 18 then
             g.isDead = true
+            end
         end
         sounds.Squish:play()
     end
