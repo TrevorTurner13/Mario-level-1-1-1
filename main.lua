@@ -92,10 +92,13 @@ function love.load()
     spawnGambu(2000, 270)
     spawnGambu(2025, 270)
     spawnGambu(3000, 270)
+    spawnGambu(2125, 270)
+    
 
     kapoos = {}
     spawnKapoos(100, 270)
     spawnKapoos(500, 270)
+    spawnKapoos(1200, 270)
 
     coins = {}
     spawnCoins(244, 225)
